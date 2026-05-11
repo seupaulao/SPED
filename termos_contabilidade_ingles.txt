@@ -1,0 +1,588 @@
+
+## 💰 1. Ativos, Passivos e Patrimônio
+
+* **Assets** → Ativos
+
+  * **Current Assets** → Ativo Circulante
+  * **Non-current Assets / Fixed Assets** → Ativo Não Circulante
+  
+* **Liabilities** → Passivos
+
+  * **Current Liabilities** → Passivo Circulante
+  * **Long-term Liabilities** → Passivo Não Circulante
+* **Equity / Shareholders’ Equity** → Patrimônio Líquido
+
+---
+
+## 📈 2. Receitas e Despesas
+
+* **Revenue / Sales** → Receita
+* **Gross Revenue** → Receita Bruta
+* **Net Revenue** → Receita Líquida
+* **Expenses** → Despesas
+* **Operating Expenses (OPEX)** → Despesas Operacionais
+* **Cost of Goods Sold (COGS)** → Custo das Mercadorias Vendidas (CMV)
+* **Gross Profit** → Lucro Bruto
+* **Net Income / Net Profit** → Lucro Líquido
+
+---
+
+## 📊 3. Demonstrações Financeiras (Financial Statements)
+
+* **Balance Sheet** → Balanço Patrimonial
+* **Income Statement / Profit and Loss (P&L)** → Demonstração de Resultado
+* **Cash Flow Statement** → Demonstração de Fluxo de Caixa
+* **Statement of Changes in Equity** → Demonstração de Mutações do Patrimônio Líquido
+
+---
+
+
+## 🧾 4. Termos do Dia a Dia Contábil
+
+* **Accounts Payable (AP)** → Contas a Pagar
+* **Accounts Receivable (AR)** → Contas a Receber
+* **Invoice** → Fatura
+* **Billing** → Faturamento
+* **Bookkeeping** → Escrituração Contábil
+* **Ledger / General Ledger (GL)** → Livro Razão
+* **Journal Entry** → Lançamento Contábil
+
+---
+
+## 🏦 5. Caixa e Bancos
+
+* **Cash** → Caixa
+* **Cash Equivalent** → Equivalente de Caixa
+* **Bank Reconciliation** → Conciliação Bancária
+* **Petty Cash** → Caixa Pequeno
+
+---
+
+## 📉 6. Depreciação e Avaliação
+
+* **Depreciation** → Depreciação
+* **Amortization** → Amortização
+* **Impairment** → Redução ao Valor Recuperável
+
+---
+
+## 📊 7. Indicadores e Análise
+
+* **EBITDA** → Lucro antes de juros, impostos, depreciação e amortização
+* **Net Margin** → Margem Líquida
+* **Gross Margin** → Margem Bruta
+* **Break-even Point** → Ponto de Equilíbrio
+
+---
+
+## 🌍 8. Normas e Auditoria
+
+* **GAAP (Generally Accepted Accounting Principles)** → Princípios Contábeis
+* **IFRS (International Financial Reporting Standards)** → Normas Internacionais
+* **Audit** → Auditoria
+* **Internal Audit** → Auditoria Interna
+* **External Audit** → Auditoria Externa
+* **Compliance** → Conformidade
+
+---
+
+## 💼 9. Termos úteis para seu contexto (médicos PJ)
+
+Como você trabalha com médicos PJ, esses são especialmente úteis:
+
+* **Service Agreement** → Contrato de Prestação de Serviços
+* **Independent Contractor** → Prestador de Serviço (PJ)
+* **Payroll** → Folha de Pagamento (mais usado para CLT)
+* **Tax Return** → Declaração de Imposto
+* **Withholding Tax** → Imposto Retido na Fonte
+* **Corporate Tax** → Imposto da Pessoa Jurídica
+
+---
+
+
+# 📊 1. Termos em inglês para **análise de demonstrações contábeis**
+
+## 🔎 Conceitos gerais de análise
+
+* **Financial Statement Analysis** → Análise de Demonstrações Contábeis
+* **Horizontal Analysis** → Análise Horizontal
+* **Vertical Analysis (Common-size Analysis)** → Análise Vertical
+* **Trend Analysis** → Análise de Tendência
+* **Ratio Analysis** → Análise por Indicadores
+* **Variance Analysis** → Análise de Variação
+* **Benchmarking** → Comparação com mercado
+* **Peer Analysis** → Análise de concorrentes
+
+---
+
+## 🧠 Qualidade e interpretação
+
+* **Earnings Quality** → Qualidade do Lucro
+* **Sustainability of Earnings** → Sustentabilidade dos Resultados
+* **Revenue Recognition** → Reconhecimento de Receita
+* **Accruals** → Regime de Competência (ajustes contábeis)
+* **Cash-based vs Accrual-based Accounting** → Caixa vs Competência
+* **Non-recurring Items** → Itens não recorrentes
+* **Extraordinary Items** → Itens extraordinários
+* **Accounting Policies** → Políticas Contábeis
+
+---
+
+## ⚠️ Riscos e estrutura
+
+* **Financial Risk** → Risco Financeiro
+* **Credit Risk** → Risco de Crédito
+* **Liquidity Risk** → Risco de Liquidez
+* **Solvency Risk** → Risco de Solvência
+* **Leverage** → Alavancagem
+* **Capital Structure** → Estrutura de Capital
+
+---
+
+# 📈 2. Indicadores da análise quantitativa (Ratios)
+
+Aqui está praticamente o “arsenal completo” usado no mercado.
+
+---
+
+## 💧 Liquidez (Liquidity Ratios)
+
+* **Current Ratio** → Liquidez Corrente
+* **Quick Ratio (Acid-test Ratio)** → Liquidez Seca
+* **Cash Ratio** → Liquidez Imediata
+* **Working Capital** → Capital de Giro
+
+---
+
+## 🏦 Estrutura de capital / Endividamento
+
+* **Debt to Equity Ratio (D/E)** → Dívida / Patrimônio
+* **Debt Ratio** → Índice de Endividamento
+* **Equity Ratio** → Índice de Capital Próprio
+* **Financial Leverage Ratio** → Alavancagem Financeira
+* **Interest Coverage Ratio** → Cobertura de Juros
+* **Debt Service Coverage Ratio (DSCR)** → Cobertura da Dívida
+
+---
+
+## 📊 Rentabilidade (Profitability Ratios)
+
+* **Gross Margin** → Margem Bruta
+* **Operating Margin** → Margem Operacional
+* **Net Profit Margin** → Margem Líquida
+* **Return on Assets (ROA)** → Retorno sobre Ativos
+* **Return on Equity (ROE)** → Retorno sobre Patrimônio
+* **Return on Invested Capital (ROIC)** → Retorno sobre Capital Investido
+* **Earnings per Share (EPS)** → Lucro por Ação
+
+---
+
+## 🔄 Eficiência / Atividade (Efficiency Ratios)
+
+* **Asset Turnover** → Giro de Ativos
+* **Inventory Turnover** → Giro de Estoques
+* **Receivables Turnover** → Giro de Contas a Receber
+* **Payables Turnover** → Giro de Contas a Pagar
+
+---
+
+## ⏱️ Ciclos operacionais
+
+* **Days Sales Outstanding (DSO)** → Prazo médio de recebimento
+* **Days Inventory Outstanding (DIO)** → Prazo médio de estocagem
+* **Days Payable Outstanding (DPO)** → Prazo médio de pagamento
+* **Cash Conversion Cycle (CCC)** → Ciclo de Conversão de Caixa
+
+---
+
+## 💸 Fluxo de caixa
+
+* **Operating Cash Flow (OCF)** → Fluxo de Caixa Operacional
+* **Free Cash Flow (FCF)** → Fluxo de Caixa Livre
+* **Cash Flow Margin** → Margem de Caixa
+
+---
+
+## 📉 Indicadores de mercado (mais usados em valuation)
+
+* **Price to Earnings (P/E)** → Preço/Lucro
+* **Price to Book (P/B)** → Preço/Valor Patrimonial
+* **Enterprise Value (EV)** → Valor da Firma
+* **EV/EBITDA** → Múltiplo operacional
+
+---
+
+# 📑 3. Principais relatórios e demonstrações contábeis
+
+---
+
+## 📊 Demonstrações principais
+
+* **Balance Sheet** → Balanço Patrimonial
+* **Income Statement / Profit and Loss (P&L)** → DRE
+* **Cash Flow Statement** → Fluxo de Caixa
+* **Statement of Changes in Equity** → DMPL
+
+---
+
+## 📘 Relatórios complementares
+
+* **Notes to Financial Statements (Footnotes)** → Notas Explicativas
+* **Management Discussion and Analysis (MD&A)** → Relatório da Administração
+* **Independent Auditor’s Report** → Relatório do Auditor Independente
+* **Annual Report** → Relatório Anual
+
+---
+
+## 🧾 Relatórios gerenciais
+
+* **Budget Report** → Relatório Orçamentário
+* **Forecast Report** → Previsões Financeiras
+* **Variance Report** → Relatório de Desvios
+* **Cost Report** → Relatório de Custos
+* **Performance Report** → Relatório de Desempenho
+
+---
+
+## 🏥 (extra) Relatórios úteis para seu nicho médico PJ
+
+* **Revenue per Contract** → Receita por contrato
+* **Cost per Procedure** → Custo por procedimento
+* **Utilization Rate** → Taxa de utilização
+* **Billing Report** → Relatório de faturamento
+* **Tax Liability Report** → Relatório de impostos
+
+---
+
+# 📦 Módulo: `financialRatios.js`
+
+```js
+/**
+ * financialRatios.js
+ * Funções de indicadores financeiros para análise de demonstrações contábeis
+ * Todas as funções assumem valores numéricos (Number)
+ */
+
+const FinancialRatios = {
+
+  // ==============================
+  // 💧 LIQUIDEZ
+  // ==============================
+
+  /**
+   * Current Ratio (Liquidez Corrente)
+   * Mede a capacidade de pagar obrigações de curto prazo
+   * Fórmula: Current Assets / Current Liabilities
+   * 🎯 Ideal: > 1.5 (seguro), > 2 (muito confortável)
+   */
+  currentRatio: (currentAssets, currentLiabilities) => {
+    return currentAssets / currentLiabilities;
+  },
+
+  /**
+   * Quick Ratio (Liquidez Seca)
+   * Exclui estoques (menos líquidos)
+   * Fórmula: (Current Assets - Inventory) / Current Liabilities
+   * 🎯 Ideal: > 1
+   */
+  quickRatio: (currentAssets, inventory, currentLiabilities) => {
+    return (currentAssets - inventory) / currentLiabilities;
+  },
+
+  /**
+   * Cash Ratio (Liquidez Imediata)
+   * Mede capacidade de pagar dívidas apenas com caixa
+   * Fórmula: Cash / Current Liabilities
+   * 🎯 Ideal: 0.2 a 0.5 (muito alto pode indicar ociosidade)
+   */
+  cashRatio: (cash, currentLiabilities) => {
+    return cash / currentLiabilities;
+  },
+
+  /**
+   * Working Capital (Capital de Giro)
+   * Recursos disponíveis no curto prazo
+   * Fórmula: Current Assets - Current Liabilities
+   * 🎯 Ideal: Positivo
+   */
+  workingCapital: (currentAssets, currentLiabilities) => {
+    return currentAssets - currentLiabilities;
+  },
+
+  // ==============================
+  // 🏦 ENDIVIDAMENTO
+  // ==============================
+
+  /**
+   * Debt to Equity (D/E)
+   * Mede o quanto a empresa depende de capital de terceiros
+   * Fórmula: Total Debt / Equity
+   * 🎯 Ideal: < 1 (depende do setor)
+   */
+  debtToEquity: (totalDebt, equity) => {
+    return totalDebt / equity;
+  },
+
+  /**
+   * Debt Ratio
+   * Percentual dos ativos financiados por dívida
+   * Fórmula: Total Debt / Total Assets
+   * 🎯 Ideal: < 0.6
+   */
+  debtRatio: (totalDebt, totalAssets) => {
+    return totalDebt / totalAssets;
+  },
+
+  /**
+   * Interest Coverage Ratio
+   * Capacidade de pagar juros
+   * Fórmula: EBIT / Interest Expense
+   * 🎯 Ideal: > 3 (seguro), > 5 (excelente)
+   */
+  interestCoverage: (ebit, interestExpense) => {
+    return ebit / interestExpense;
+  },
+
+  /**
+   * Debt Service Coverage Ratio (DSCR)
+   * Capacidade de pagar dívida total (juros + principal)
+   * Fórmula: Operating Income / Debt Service
+   * 🎯 Ideal: > 1.2
+   */
+  dscr: (operatingIncome, debtService) => {
+    return operatingIncome / debtService;
+  },
+
+  // ==============================
+  // 📈 RENTABILIDADE
+  // ==============================
+
+  /**
+   * Gross Margin
+   * Lucro bruto sobre receita
+   * Fórmula: (Revenue - COGS) / Revenue
+   * 🎯 Ideal: Quanto maior, melhor (depende do setor)
+   */
+  grossMargin: (revenue, cogs) => {
+    return (revenue - cogs) / revenue;
+  },
+
+  /**
+   * Operating Margin
+   * Eficiência operacional
+   * Fórmula: Operating Income / Revenue
+   * 🎯 Ideal: > 10% geralmente bom
+   */
+  operatingMargin: (operatingIncome, revenue) => {
+    return operatingIncome / revenue;
+  },
+
+  /**
+   * Net Profit Margin
+   * Lucro líquido sobre receita
+   * Fórmula: Net Income / Revenue
+   * 🎯 Ideal: > 10% bom, > 20% excelente
+   */
+  netMargin: (netIncome, revenue) => {
+    return netIncome / revenue;
+  },
+
+  /**
+   * Return on Assets (ROA)
+   * Eficiência dos ativos
+   * Fórmula: Net Income / Total Assets
+   * 🎯 Ideal: > 5%
+   */
+  roa: (netIncome, totalAssets) => {
+    return netIncome / totalAssets;
+  },
+
+  /**
+   * Return on Equity (ROE)
+   * Retorno para os sócios
+   * Fórmula: Net Income / Equity
+   * 🎯 Ideal: > 15%
+   */
+  roe: (netIncome, equity) => {
+    return netIncome / equity;
+  },
+
+  /**
+   * Return on Invested Capital (ROIC)
+   * Eficiência do capital investido
+   * Fórmula: NOPAT / Invested Capital
+   * 🎯 Ideal: > custo de capital (WACC)
+   */
+  roic: (nopat, investedCapital) => {
+    return nopat / investedCapital;
+  },
+
+  // ==============================
+  // 🔄 EFICIÊNCIA
+  // ==============================
+
+  /**
+   * Asset Turnover
+   * Uso eficiente dos ativos
+   * Fórmula: Revenue / Total Assets
+   * 🎯 Ideal: Quanto maior, melhor
+   */
+  assetTurnover: (revenue, totalAssets) => {
+    return revenue / totalAssets;
+  },
+
+  /**
+   * Inventory Turnover
+   * Velocidade de giro do estoque
+   * Fórmula: COGS / Inventory
+   * 🎯 Ideal: Alto (depende do setor)
+   */
+  inventoryTurnover: (cogs, inventory) => {
+    return cogs / inventory;
+  },
+
+  /**
+   * Receivables Turnover
+   * Eficiência na cobrança
+   * Fórmula: Revenue / Accounts Receivable
+   * 🎯 Ideal: Alto
+   */
+  receivablesTurnover: (revenue, receivables) => {
+    return revenue / receivables;
+  },
+
+  /**
+   * Payables Turnover
+   * Frequência de pagamento a fornecedores
+   * Fórmula: COGS / Accounts Payable
+   * 🎯 Ideal: Moderado (não muito alto)
+   */
+  payablesTurnover: (cogs, payables) => {
+    return cogs / payables;
+  },
+
+  // ==============================
+  // ⏱️ CICLO DE CAIXA
+  // ==============================
+
+  /**
+   * Days Sales Outstanding (DSO)
+   * Prazo médio de recebimento
+   * Fórmula: (Accounts Receivable / Revenue) * 365
+   * 🎯 Ideal: Baixo
+   */
+  dso: (receivables, revenue) => {
+    return (receivables / revenue) * 365;
+  },
+
+  /**
+   * Days Inventory Outstanding (DIO)
+   * Tempo médio de estoque
+   * Fórmula: (Inventory / COGS) * 365
+   * 🎯 Ideal: Baixo
+   */
+  dio: (inventory, cogs) => {
+    return (inventory / cogs) * 365;
+  },
+
+  /**
+   * Days Payables Outstanding (DPO)
+   * Prazo médio de pagamento
+   * Fórmula: (Accounts Payable / COGS) * 365
+   * 🎯 Ideal: Alto (sem prejudicar fornecedores)
+   */
+  dpo: (payables, cogs) => {
+    return (payables / cogs) * 365;
+  },
+
+  /**
+   * Cash Conversion Cycle (CCC)
+   * Tempo para converter investimento em caixa
+   * Fórmula: DSO + DIO - DPO
+   * 🎯 Ideal: Baixo ou negativo
+   */
+  ccc: (dso, dio, dpo) => {
+    return dso + dio - dpo;
+  },
+
+  // ==============================
+  // 💸 FLUXO DE CAIXA
+  // ==============================
+
+  /**
+   * Free Cash Flow (FCF)
+   * Caixa disponível após investimentos
+   * Fórmula: Operating Cash Flow - CAPEX
+   * 🎯 Ideal: Positivo e crescente
+   */
+  freeCashFlow: (operatingCashFlow, capex) => {
+    return operatingCashFlow - capex;
+  },
+
+  /**
+   * Cash Flow Margin
+   * Geração de caixa sobre receita
+   * Fórmula: Operating Cash Flow / Revenue
+   * 🎯 Ideal: Alto
+   */
+  cashFlowMargin: (operatingCashFlow, revenue) => {
+    return operatingCashFlow / revenue;
+  }
+
+};
+
+module.exports = FinancialRatios;
+```
+
+---
+
+# ⚙️ Como usar no seu backend
+
+```js
+const ratios = require('./financialRatios');
+
+const result = ratios.currentRatio(50000, 20000);
+
+console.log("Current Ratio:", result);
+```
+
+---
+
+# 💡 Boas práticas (isso aqui é ouro pra sistema contábil)
+
+### 1. Padronize nomes (inglês no backend)
+
+Ex:
+
+```js
+netIncome
+currentAssets
+totalLiabilities
+```
+
+### 2. Trate divisão por zero
+
+```js
+if (currentLiabilities === 0) return null;
+```
+
+### 3. Normalize percentuais
+
+```js
+return (netIncome / revenue) * 100;
+```
+
+### 4. Crie camada de interpretação automática
+
+Ex:
+
+```js
+function classifyCurrentRatio(value) {
+  if (value > 2) return "excellent";
+  if (value > 1.5) return "good";
+  if (value > 1) return "warning";
+  return "risk";
+}
+```
+
+
