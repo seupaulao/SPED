@@ -20,7 +20,11 @@ CREATE TABLE plano_contas (
   conta_pai_id INT REFERENCES plano_contas(id),
   codigo_referencial VARCHAR(20),
   aceita_lancamento BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMP DEFAULT now()
+  created_at TIMESTAMP DEFAULT now(),
+  grupo TEXT, -- ATIVO, PASSIVO, PL, RECEITA, DESPESA
+  subgrupo TEXT, -- CIRCULANTE, NAO_CIRCULANTE, OPERACIONAL, FINANCEIRO
+  dre_grupo TEXT, -- RECEITA_BRUTA, CUSTO, DESPESA_OPERACIONAL, RESULTADO_FINANCEIRO
+  fluxo_caixa_tipo TEXT -- OPERACIONAL, INVESTIMENTO, FINANCIAMENTO
 );
 
 CREATE TABLE historico_padrao (
@@ -53,24 +57,8 @@ CREATE TABLE lancamento_item (
 
 --evolucao para conta resultado
 
-ALTER TABLE plano_contas ADD COLUMN grupo TEXT;
--- Ex:
--- ATIVO, PASSIVO, PL, RECEITA, DESPESA
-
-ALTER TABLE plano_contas ADD COLUMN subgrupo TEXT;
--- Ex:
--- CIRCULANTE, NAO_CIRCULANTE, OPERACIONAL, FINANCEIRO
-
-ALTER TABLE plano_contas ADD COLUMN dre_grupo TEXT;
--- Ex:
--- RECEITA_BRUTA, CUSTO, DESPESA_OPERACIONAL, RESULTADO_FINANCEIRO
-
-ALTER TABLE plano_contas ADD COLUMN fluxo_caixa_tipo TEXT;
--- Ex:
--- OPERACIONAL, INVESTIMENTO, FINANCIAMENTO
-
 CREATE TABLE mapa_demonstracoes (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  id SERIAL PRIMARY KEY,
   conta_id INTEGER,
   tipo TEXT, -- DRE, DVA, DFC
   categoria TEXT,
@@ -78,4 +66,6 @@ CREATE TABLE mapa_demonstracoes (
   FOREIGN KEY (conta_id) REFERENCES plano_contas(id)
 );
 
+CREATE INDEX idx_lancamento_data ON lancamento(data);
+CREATE INDEX idx_lancamento_item_conta ON lancamento_item(conta_id);
 

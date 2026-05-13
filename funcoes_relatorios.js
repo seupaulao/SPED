@@ -1,3 +1,4 @@
+
 async function balancete(db, dataInicio, dataFim) {
   const rows = await db.all(`
     SELECT 

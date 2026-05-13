@@ -63,3 +63,12 @@ CREATE TABLE lancamento_item (
   FOREIGN KEY (lancamento_id) REFERENCES lancamento(id) ON DELETE CASCADE,
   FOREIGN KEY (conta_id) REFERENCES plano_contas(id)
 );
+
+CREATE TABLE mapa_demonstracoes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT ,
+  conta_id INTEGER,
+  tipo TEXT, -- DRE, DVA, DFC
+  categoria TEXT,
+
+  FOREIGN KEY (conta_id) REFERENCES plano_contas(id)
+);

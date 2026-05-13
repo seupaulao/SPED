@@ -6,6 +6,10 @@ function line(reg, fields) {
   return `|${reg}|${fields.join('|')}|`;
 }
 
+function isContaAnalitica(conta) {
+	return conta.tipo == 'A';
+}
+
 function reg0000(empresa) {
   return line("0000", [
     "LECD",
@@ -121,4 +125,69 @@ function gerarECD(dados) {
   return linhas.join("\n");
 }
 
+function getProlabore(receita, percentual) {
+	 return receita * percentual;
+}
 
+function getINSS(prolabore) { return 0.11 * prolabore; }
+
+function getIRPJ(base) { return 0.15 * base; }
+
+function getCSLL(base) { return 0.09 * base; }
+
+function getPIS(receita) { return 0.0065 * receita; }
+
+function getCOFINS(receita) { return 0.03 * receita; }
+
+function getISS(receita) { return 0.05 * receita; }
+
+function getAnexoSN(prolabore, receita) {
+	let razao = prolabore / receita;
+    return razao >= 0.28 ? 3 : 5;
+}
+
+function getAliquotaSimples(prolabore, receita) {
+	return getAnexoSN(prolabore, receita) == 3 ? 0.06 : 0.15; 
+}
+
+function calcularDASSimplesNacional(receita, percentualProlab) {
+	 let prolabore = getProlabore(percentualProlab);
+     return receita * getAliquotaSimples(prolabore, receita);	 
+}
+
+function calcularDASLucroPresumido(receita) {
+	 let base = 0.32 * receita;
+	 let csll = getCSLL(base);
+	 let irpj = getIRPJ(base);
+	 let pis = getPIS(receita);
+	 let cofins = getCOFINS(receita);
+	 let iss = getISS(receita);
+	 return csll + irpj + pis + cofins + iss;
+}
+
+function getMaisVantajoso(receita, percentualProlabore) {
+	 let snacional = calcularDASSimplesNacional(receita, percentualProlabore) ;
+	 let presumido = calcularDASLucroPresumido(receita);
+	 return snacional > presumido ? presumido : snacional;
+}
+
+function calcularDASLiquido(das, retencoes) {
+	 return Math.max(0, das - retencoes);
+}
+
+function addDASINSS(receita, percentualProlabore, retencoes) {
+	 let das = getMaisVantajoso(receita, percentualProlabore);
+	 let dasliquido = calcularDASLiquido(das, retencoes);
+	 let prolabore = getProlabore(percentualProlab);
+	 let inss = getINSS(prolabore);
+	 return dasliquido + inss;
+}
+
+function isPrecisoECD(receita, despesa) {
+	let presuncaoFiscal = 0.32;
+	let limiteIsento = receita * presuncaoFiscal;
+	let lucroContabil = receita - despesa;
+	let distribuicaoIsenta = Math.min(lucro, limiteIsento);
+	let excedenteTributavel = Math.max(0, lucro - limiteIsento);
+	return excedenteTributavel > 0;
+}

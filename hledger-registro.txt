@@ -1,0 +1,634 @@
+Boa — isso dá pra estruturar de forma bem limpa no **hledger**, 
+seguindo contabilidade por partidas dobradas. Vou te mostrar um modelo prático 
+(já no formato `.journal`) e com lógica contábil correta para PJ médica no Simples.
+
+---
+
+## 📌 Premissas do exemplo
+
+* Receita: **R$ 17.000**
+* Pró-labore: **28% = R$ 4.760**
+* INSS (11% sobre pró-labore): **R$ 523,60**
+* DAS (vou estimar 6% só como exemplo → R$ 1.020)**
+  👉 *Você deve ajustar a alíquota conforme faixa do Anexo III ou V*
+
+---
+
+## 📘 Plano de contas sugerido
+
+```txt
+assets:bank:conta_corrente
+income:servicos:medicos
+expenses:prolabore
+expenses:inss
+expenses:simples_nacional
+liabilities:inss_a_pagar
+liabilities:prolabore_a_pagar
+liabilities:impostos_a_pagar
+equity:lucros
+```
+
+---
+
+## 💰 1. Recebimento do hospital
+
+```txt
+2026-05-01 Recebimento Hospital1
+    assets:bank:conta_corrente     17000.00 BRL
+    income:servicos:medicos       -17000.00 BRL
+```
+
+---
+
+## 👨‍⚕️ 2. Registro do pró-labore (competência)
+
+```txt
+2026-05-01 Prolabore (28%)
+    expenses:prolabore              4760.00 BRL
+    liabilities:prolabore_a_pagar  -4760.00 BRL
+```
+
+---
+
+## 🧾 3. INSS sobre pró-labore (11%)
+
+```txt
+2026-05-01 INSS Prolabore (11%)
+    expenses:inss                    523.60 BRL
+    liabilities:inss_a_pagar        -523.60 BRL
+```
+
+---
+
+## 🧮 4. DAS (Simples Nacional)
+
+```txt
+2026-05-01 DAS Simples Nacional
+    expenses:simples_nacional      1020.00 BRL
+    liabilities:impostos_a_pagar  -1020.00 BRL
+```
+
+---
+
+## 💸 5. Pagamentos (quando ocorrerem)
+
+### Pró-labore pago ao sócio
+
+```txt
+2026-05-05 Pagamento Prolabore
+    liabilities:prolabore_a_pagar   4760.00 BRL
+    assets:bank:conta_corrente     -4760.00 BRL
+```
+
+### INSS pago
+
+```txt
+2026-05-10 Pagamento INSS
+    liabilities:inss_a_pagar        523.60 BRL
+    assets:bank:conta_corrente     -523.60 BRL
+```
+
+### DAS pago
+
+```txt
+2026-05-20 Pagamento DAS
+    liabilities:impostos_a_pagar   1020.00 BRL
+    assets:bank:conta_corrente    -1020.00 BRL
+```
+
+---
+
+## 📊 Resultado (visão contábil)
+
+* Receita: 17.000
+* Despesas:
+
+  * Pró-labore: 4.760
+  * INSS: 523,60
+  * DAS: 1.020
+* **Lucro aproximado: 10.696,40**
+
+Se quiser fechar o resultado:
+
+```txt
+2026-05-31 Apuração do resultado
+    income:servicos:medicos        17000.00 BRL
+    expenses:prolabore             -4760.00 BRL
+    expenses:inss                  -523.60 BRL
+    expenses:simples_nacional      -1020.00 BRL
+    equity:lucros                 -10696.40 BRL
+```
+
+---
+
+## ⚠️ Pontos importantes (pra não fazer errado)
+
+* Pró-labore **não é distribuição de lucro** → é despesa operacional
+* INSS entra como **despesa + passivo**, não direto no banco
+* DAS **não reduz receita**, é despesa tributária
+* Distribuição de lucro (se fizer) entra separado depois
+
+1 Fncionário - Secretária
+
+Vamos direto ao ponto — para CLT você precisa separar **3 coisas diferentes** que muita gente mistura:
+
+1. **Despesa da empresa (salário + encargos patronais)**
+2. **Descontos do funcionário (INSS, FGTS não é desconto)**
+3. **Obrigações a pagar (INSS, FGTS, salário líquido)**
+
+Vou montar um exemplo completo em **hledger** com salário de **R$ 1.600**.
+
+---
+
+# 📌 Premissas (simplificadas e realistas)
+
+* Salário bruto: **1.600**
+
+* INSS empregado (~8%): **128,00**
+
+* FGTS (8%): **128,00**
+
+* INSS patronal (20%) → ⚠️ depende do Simples
+  👉 vou assumir **empresa fora do CPP do Simples**: **320,00**
+
+* Salário líquido:
+  👉 **1.600 - 128 = 1.472**
+
+---
+
+# 📘 Plano de contas sugerido
+
+```txt
+assets:bank:conta_corrente
+
+expenses:salarios
+expenses:inss_patronal
+expenses:fgts
+
+liabilities:salarios_a_pagar
+liabilities:inss_a_pagar
+liabilities:fgts_a_pagar
+liabilities:inss_retido
+```
+
+---
+
+# 🧾 1. Folha (competência)
+
+Aqui acontece a mágica contábil: você reconhece tudo, mesmo sem pagar.
+
+```txt
+2026-05-31 Folha Secretária CLT
+    expenses:salarios              1600.00 BRL
+    expenses:inss_patronal         320.00 BRL
+    expenses:fgts                  128.00 BRL
+
+    liabilities:salarios_a_pagar  -1472.00 BRL
+    liabilities:inss_retido       -128.00 BRL
+    liabilities:inss_a_pagar      -320.00 BRL
+    liabilities:fgts_a_pagar      -128.00 BRL
+```
+
+---
+
+## 🧠 Entenda esse lançamento (isso evita erro clássico)
+
+* Empresa gasta:
+
+  * salário = 1600
+  * INSS patronal = 320
+  * FGTS = 128
+
+* Funcionário “segura”:
+
+  * INSS = 128 (vira dívida da empresa com o governo)
+
+* Empresa fica devendo:
+
+  * líquido pro funcionário
+  * INSS total (retido + patronal)
+  * FGTS
+
+---
+
+# 💸 2. Pagamento do salário
+
+```txt
+2026-06-05 Pagamento salário
+    liabilities:salarios_a_pagar   1472.00 BRL
+    assets:bank:conta_corrente    -1472.00 BRL
+```
+
+---
+
+# 🧾 3. Pagamento do INSS
+
+👉 paga **128 + 320 = 448**
+
+```txt
+2026-06-20 Pagamento INSS
+    liabilities:inss_retido        128.00 BRL
+    liabilities:inss_a_pagar       320.00 BRL
+    assets:bank:conta_corrente    -448.00 BRL
+```
+
+---
+
+# 🏦 4. Pagamento do FGTS
+
+```txt
+2026-06-07 Pagamento FGTS
+    liabilities:fgts_a_pagar       128.00 BRL
+    assets:bank:conta_corrente    -128.00 BRL
+```
+
+---
+
+# 📊 Custo real da funcionária
+
+* Salário: 1600
+* INSS patronal: 320
+* FGTS: 128
+
+👉 **Custo total: 2.048**
+
+---
+
+# ⚠️ Agora o ponto MAIS importante (pra médico PJ)
+
+Se sua cliente está no **Simples Nacional (Anexo III ou V)**:
+
+### 👉 Pode mudar TUDO
+
+* Empresas do Simples **podem já pagar o INSS patronal dentro do DAS (CPP)**
+* Se for o caso:
+
+  * ❌ NÃO lança `expenses:inss_patronal`
+  * ❌ NÃO lança `liabilities:inss_a_pagar` (parte patronal)
+  * ✔ só fica:
+
+    * INSS retido
+    * FGTS
+
+---
+
+# 🧠 Versão SIMPLES NACIONAL (mais comum para médicos)
+
+```txt
+2026-05-31 Folha Secretária CLT (Simples)
+    expenses:salarios              1600.00 BRL
+    expenses:fgts                  128.00 BRL
+
+    liabilities:salarios_a_pagar  -1472.00 BRL
+    liabilities:inss_retido       -128.00 BRL
+    liabilities:fgts_a_pagar      -128.00 BRL
+```
+
+
+---
+
+Se quiser, no próximo passo eu posso montar um **modelo completo 
+de folha com múltiplos funcionários + integração com seu sistema contábil** — 
+isso aqui escala MUITO para o tipo de cliente que você atende.
+
+=====================
+
+Ótima pergunta — isso aqui é **ponto crítico na contabilidade de médico PJ** e muita gente erra.
+
+---
+
+# 📌 O que significa “empresa fora do CPP do Simples”
+
+👉 Significa:
+
+> A empresa **NÃO paga o INSS patronal dentro do DAS**,
+> tendo que calcular e pagar **separadamente sobre a folha** (como no lucro presumido).
+
+---
+
+# 🧾 Primeiro: o que é CPP?
+
+CPP = **Contribuição Previdenciária Patronal**
+👉 basicamente o **INSS da empresa**
+
+* É a parte que o **empregador paga**, diferente do INSS descontado do funcionário ([Cora][1])
+* Normalmente é **20% sobre a folha de pagamento** ([CRCSP][2])
+* Serve para financiar a Previdência Social ([Contabilizei][3])
+
+---
+
+# 🧠 Agora vem o ponto chave (Simples Nacional)
+
+No Simples existem **2 cenários completamente diferentes**:
+
+---
+
+## ✅ 1. Empresa “DENTRO do CPP” (mais comum)
+
+👉 CPP já está embutido no DAS
+
+* Não calcula INSS patronal separado
+* Não lança 20% sobre folha
+* Não paga GPS/DARF de INSS patronal
+
+✔ Isso acontece nos anexos:
+
+* Anexo I
+* Anexo II
+* Anexo III
+* Anexo V ([Cora][1])
+
+👉 Aqui a CPP já está “escondida” dentro da alíquota do Simples
+
+---
+
+## ❌ 2. Empresa “FORA do CPP” (o que você perguntou)
+
+👉 CPP NÃO está no DAS
+
+* Precisa calcular:
+
+  * **20% sobre a folha**
+* Precisa pagar separado:
+
+  * via **INSS (DCTFWeb/DARF)**
+
+✔ Isso acontece no:
+
+### 🔴 Anexo IV
+
+Exemplos típicos:
+
+* construção civil
+* limpeza
+* vigilância
+* advocacia ([Contabilizei][4])
+
+👉 Nesses casos:
+
+> “A CPP não está incluída na alíquota do Simples Nacional” ([Serviços e Informações do Brasil][5])
+
+---
+
+# 📊 Tradução prática (pra você usar no dia a dia)
+
+## 💡 Quando você vê:
+
+👉 “empresa fora do CPP do Simples”
+
+Significa:
+
+✔ Tem que lançar no hledger:
+
+```txt
+expenses:inss_patronal
+liabilities:inss_a_pagar
+```
+
+✔ Tem custo real de folha maior
+✔ Impacta fortemente o caixa
+
+---
+
+## 💡 Quando está “dentro do CPP”
+
+👉 NÃO lança INSS patronal separado
+
+✔ Só:
+
+* salário
+* FGTS
+* INSS retido
+
+---
+
+# ⚠️ Aplicando isso para médicos PJ
+
+Aqui está o detalhe que separa contador comum de especialista:
+
+### 👨‍⚕️ Médicos normalmente:
+
+* começam no **Anexo V**
+* podem ir para **Anexo III (fator R)**
+
+👉 Em ambos os casos:
+✅ CPP está **dentro do DAS**
+
+✔ Ou seja:
+
+> **NÃO existe INSS patronal de 20% na folha**
+
+---
+
+# 🚨 Erro clássico (e caro)
+
+Muitos contadores fazem isso errado:
+
+* lançam INSS patronal de 20%
+* mesmo estando no Anexo III/V
+
+👉 Isso **superestima custo** e distorce DRE
+
+---
+
+# 🧠 Resumo definitivo
+
+| Situação            | CPP                           |
+| ------------------- | ----------------------------- |
+| Anexo I, II, III, V | ✔ dentro do DAS               |
+| Anexo IV            | ❌ fora do DAS (paga separado) |
+
+
+Isso aqui vira um diferencial absurdo no seu escritório.
+
+[1]: https://www.cora.com.br/blog/cpp-simples-nacional-como-calcular/?utm_source=chatgpt.com "CPP no Simples Nacional: saiba quem paga e como calcular"
+[2]: https://crcsp.org.br/portal/publicacoes/crcsp-online/materias/828_03.htm?utm_source=chatgpt.com "O que é a CPP do Simples Nacional?"
+[3]: https://www.contabilizei.com.br/contabilizei-responde/para-que-serve-o-cpp-do-simples-nacional/?utm_source=chatgpt.com "Para que serve o CPP do Simples Nacional?"
+[4]: https://www.contabilizei.com.br/contabilidade-online/inss-simples-nacional/?utm_source=chatgpt.com "INSS no Simples Nacional: Como funciona o recolhimento ..."
+[5]: https://www.gov.br/receitafederal/pt-br/assuntos/orientacao-tributaria/cobrancas-e-intimacoes/contribuicao-previdenciaria-anexo-iv-do-simples-nacional?utm_source=chatgpt.com "Contribuição Previdenciária - Anexo IV do Simples Nacional"
+
+======================
+
+Você consegue gerar holerites a partir do **hledger**, mas não de forma “nativa”. A ideia correta é:
+
+> usar o **hledger como fonte contábil** → extrair os dados → montar o holerite via script/template
+
+Vou te mostrar um fluxo profissional (que dá pra escalar no seu escritório).
+
+---
+
+# 📌 1. O que o hledger já tem (e o que não tem)
+
+✔ Tem:
+
+* valores de salário, INSS, FGTS
+* datas
+* contas (estrutura perfeita)
+
+❌ Não tem:
+
+* layout de holerite
+* discriminação amigável automática
+
+👉 Então você precisa transformar os lançamentos em **estrutura de folha**
+
+---
+
+# 📊 2. Estrutura do holerite (CLT – sua secretária)
+
+Baseado no seu cenário (Simples Anexo III, sem INSS patronal):
+
+### Dados do mês
+
+* Salário bruto: 1.600
+* INSS (desconto): 128
+* FGTS: 128 (não desconta)
+* Líquido: 1.472
+
+---
+
+## 🧾 Exemplo de holerite (funcionária)
+
+HOLERITE – MAIO/2026
+
+Funcionária: Secretária
+Empresa: Clínica Médica PJ
+
+---
+
+Proventos:
+Salário Base ................ R$ 1.600,00
+
+Descontos:
+INSS (8%) ................... R$   128,00
+
+---
+
+Salário Líquido ............ R$ 1.472,00
+
+## FGTS (8% - depósito) ....... R$   128,00
+
+---
+
+# 👩‍⚕️ 3. Holerite da médica (pró-labore)
+
+Aqui muda tudo: não é CLT → é **pró-labore**
+
+### Dados:
+
+* Pró-labore: 4.760
+* INSS (11%): 523,60
+* Líquido: 4.236,40
+
+---
+
+## 🧾 Exemplo (pró-labore)
+
+RECIBO DE PRÓ-LABORE – MAIO/2026
+
+Profissional: Médica PJ
+
+---
+
+Proventos:
+Pró-labore .................. R$ 4.760,00
+
+Descontos:
+INSS (11%) ................. R$   523,60
+
+---
+
+## Valor Líquido .............. R$ 4.236,40
+
+---
+
+# 🔧 4. Como extrair isso do hledger (automático)
+
+Você pode puxar os dados assim:
+
+## 👉 Salário bruto
+
+```bash
+hledger register expenses:salarios -b 2026-05 -e 2026-06
+```
+
+## 👉 INSS retido
+
+```bash
+hledger register liabilities:inss_retido -b 2026-05 -e 2026-06
+```
+
+## 👉 FGTS
+
+```bash
+hledger register expenses:fgts -b 2026-05 -e 2026-06
+```
+
+## 👉 Pró-labore
+
+```bash
+hledger register expenses:prolabore -b 2026-05 -e 2026-06
+```
+
+---
+
+# 🤖 5. Automação real (nível escritório contábil)
+
+Aqui está o caminho que recomendo pra você:
+
+## Opção A – Script Python simples
+
+* lê saída do hledger (CSV)
+* calcula:
+
+  * bruto
+  * descontos
+  * líquido
+* gera PDF
+
+### Exemplo conceitual:
+
+```python
+import subprocess
+
+def get_value(account):
+    result = subprocess.run(
+        ["hledger", "balance", account, "-O", "csv"],
+        capture_output=True, text=True
+    )
+    return float(result.stdout.splitlines()[-1].split(",")[-1])
+
+salario = get_value("expenses:salarios")
+inss = abs(get_value("liabilities:inss_retido"))
+fgts = get_value("expenses:fgts")
+
+liquido = salario - inss
+```
+
+---
+
+## Opção B – Template + Markdown (mais simples)
+
+Você pode gerar automático com:
+
+* Markdown
+* depois converter pra PDF
+
+---
+
+# 🧠 Insight importante (poucos fazem isso)
+
+Se você estruturar bem o hledger:
+
+👉 cada funcionário pode ter subconta:
+
+```txt
+expenses:salarios:secretaria
+expenses:salarios:medica
+```
+
+👉 Isso permite gerar holerite individual automaticamente
+
+---
+
+
