@@ -18,6 +18,10 @@ CREATE TABLE plano_contas (
   descricao TEXT NOT NULL,
   tipo TEXT NOT NULL, -- S ou A
   natureza TEXT, -- D ou C
+  grupo TEXT,
+  dre_grupo TEXT,
+  subgrupo TEXT,
+  fluxo_caixa_tipo TEXT,
   nivel INTEGER NOT NULL,
   conta_pai_id INTEGER,
   codigo_referencial TEXT,
@@ -72,3 +76,6 @@ CREATE TABLE mapa_demonstracoes (
 
   FOREIGN KEY (conta_id) REFERENCES plano_contas(id)
 );
+
+CREATE INDEX idx_lancamento_data ON lancamento(data);
+CREATE INDEX idx_lancamento_item_conta ON lancamento_item(conta_id);

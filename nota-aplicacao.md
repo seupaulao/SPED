@@ -7,10 +7,94 @@ preparada para partidas dobradas e crédito e débito.
 O intuito é fazer a contabilidade de diversas empresas ou entidades
 que tenham contrato com minha empresa de contabilidade.
 
+### status atual da implementacao
+
+No estado atual do projeto, os itens abaixo ja estao implementados em `pjlacontabilidade.py`:
+
+- menu principal em modo terminal
+- selecao de empresa por codigo, nome ou cnpj
+- cadastro, alteracao, listagem paginada e exclusao de empresa
+- criacao de lancamento no livro diario com validacao de partidas dobradas
+- correcao de lancamento existente
+- exclusao de lancamento existente
+- visualizacao resumida de lancamentos
+- relatorios de balancete, balanco patrimonial, DRE e DVA em formato texto
+
+Os itens abaixo continuam pendentes de detalhamento funcional:
+
+- geracao do ECD/SPED
+
 ### banco de dados
 
 o banco é em sqlite3 e está disponivel no arquivo `contabilidade.db`
 foi criado a partir do script de criação em `banco_sqlite3.sql`
+
+#### observacoes do schema atual
+
+Para suportar os relatorios e a aplicacao atual, a tabela `plano_contas`
+considera tambem os campos abaixo:
+
+- `grupo`
+- `dre_grupo`
+- `subgrupo`
+- `fluxo_caixa_tipo`
+
+Tambem sao usados indices para melhorar consultas por data e conta:
+
+- `idx_lancamento_data`
+- `idx_lancamento_item_conta`
+
+#### padrão de nomenclatura das contas (estilo hledger)
+
+As contas devem ser nomeadas seguindo o padrão do aplicativo `hledger`, onde o nome
+é composto por categorias separadas por `:` (dois-pontos). Isso facilita a hierarquização
+e a legibilidade, além de permitir futura integração com hledger ou conversão de dados.
+
+**Estrutura recomendada:**
+
+```
+[tipo]:[categoria]:[subcategoria]:[detalhe]
+```
+
+**Tipos permitidos (primeira parte do nome):**
+
+- `ativo` — contas de ativo (bens e direitos)
+- `passivo` — contas de passivo (obrigações)
+- `receita` — contas de receita/entrada
+- `despesa` — contas de despesa/saída
+- `patrimonioliquido` — contas de patrimônio líquido
+
+**Exemplos válidos:**
+
+- `ativo:bank:conta_corrente` — conta bancária no ativo
+- `ativo:caixa` — caixa (sem subcategorias)
+- `passivo:fornecedores` — fornecedores a pagar
+- `passivo:duplicatas_a_pagar` — duplicatas vencidas
+- `receita:vendas:produto` — receita de venda de produto
+- `receita:servicos:medicos` — receita de serviços médicos
+- `despesa:inss` — despesa com INSS
+- `despesa:salarios:clt` — despesa com salários de CLT
+- `patrimonioliquido:lucros` — lucros acumulados
+
+**Regras de nomenclatura:**
+
+1. Comece sempre com um dos tipos acima
+2. Use `:` (dois-pontos) como separador entre níveis
+3. Use `_` (underscore) para separar palavras dentro de um nível
+4. Use apenas minúsculas
+5. Evite espaços e caracteres especiais
+
+**Mapeamento interno:**
+
+A aplicação mapeia automaticamente esses nomes para a estrutura de `plano_contas`:
+
+- O **tipo** (primeira parte) define o `grupo` (ATIVO, PASSIVO, PL) ou classificação
+- As **subcategorias** são armazenadas na coluna `descricao` exatamente como digitadas
+- O **nível** da hierarquia é determinado automaticamente pela profundidade
+- A **natureza** (D ou C) é inferida pelo tipo (ativo/despesa = D, passivo/receita = C)
+
+Isso permite que o operador entre os nomes de forma amigável e o sistema cuide
+da organização contábil interna.
 
 ### desenvolvimento
 
@@ -154,6 +238,53 @@ Caso contrário, se o lançamento for inválido, ou se o lançamento
 foi vazio o sistema entende que o usuário deseja voltar
 para o menu da seção.
 
+**Submenu Corrigir Lancamento**
+
+Na correcao de lancamento, o sistema deve:
+
+1. mostrar os ultimos lancamentos da empresa selecionada
+2. solicitar o `ID` do lancamento que sera corrigido
+3. exibir os dados atuais do lancamento e seus itens
+4. permitir alterar `data`, `historico` e `numero`, usando `ENTER` para manter o valor atual
+5. solicitar novamente todas as partidas do lancamento
+6. validar novamente se a soma dos debitos e igual a soma dos creditos
+7. pedir confirmacao para salvar a correcao
+
+Na implementacao atual, a correcao substitui integralmente os itens do lancamento.
+
+**Submenu Apagar Lancamento**
+
+Na exclusao de lancamento, o sistema deve:
+
+1. mostrar os ultimos lancamentos da empresa selecionada
+2. solicitar o `ID` do lancamento que sera apagado
+3. exibir os dados do lancamento e seus itens
+4. pedir confirmacao antes de apagar
+5. apagar o cabecalho e os itens correspondentes em transacao unica
+
+**Submenu Visualizar todos os Lancamentos**
+
+Na implementacao atual, a visualizacao lista os lancamentos mais recentes
+da empresa selecionada, mostrando:
+
+Usar a consulta
+```sql
+select lan.id, lan.numero, conta.codigo, lan.data, conta.descricao, item.tipo, item.valor 
+from lancamento as lan inner join lancamento_item item on lan.id = item.lancamento_id,
+                   plano_contas as conta on conta.id = item.conta_id
+where empresa_id = ID_DA_EMPRESA
+```
+
+- `ID`
+- `NUMERO`
+- `CODIGO`
+- `DATA`
+- `DESCRICAO`
+- `TIPO`
+- `VALOR`
+
+Hoje a tela mostra os 10 lancamentos mais recentes e retorna ao submenu apos confirmacao do usuario.
+
 ### Menu Principal - Opção : Relatórios
 
 **Submenu**
@@ -178,6 +309,8 @@ O sistema deve calcular o relatório correspondente e exibir na tela/console no 
 
 Para o código dos relatórios o sistema pode usar como base o arquivo `funcoes_relatorios.py`
 
+Na implementacao atual, os relatorios ja filtram os dados pela empresa selecionada.
+
 Caso o usuário tecle a última opção, o sistema volta a tela anterior, no caso o Menu Principal.
 
 
@@ -192,6 +325,7 @@ Caso o usuário tecle a última opção, o sistema volta a tela anterior, no cas
 [d] Excluir
 [f] Voltar
 ```
+
 
 **Submenu Cadastrar**
 A lista composta dos campos da tabela empresas em 'contabilidade.db' deve ser exibido um a um
@@ -241,6 +375,14 @@ Caso contrário, volta ao submenu.
 **Submenu Voltar**
 
 Ao selecionar a letra correspondente, volta ao menu principal.
+
+### próximos passos
+
+Com base no estado atual da implementacao, os proximos passos recomendados sao:
+
+1. detalhar e implementar edicao pontual de itens do lancamento, sem exigir redigitacao completa de todas as partidas
+2. detalhar a geracao do ECD/SPED para substituir o placeholder atual da opcao `Gerar ECD`
+3. criar um fluxo de carga inicial de plano de contas por empresa, para permitir uso real do Livro Diario sem depender de cadastro manual direto no banco
 
 
 

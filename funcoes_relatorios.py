@@ -4,7 +4,7 @@ Implementa: balancete, balanco_patrimonial, dre, dva, dfc.
 Assume conexão sqlite3 (DB API). Retorna estruturas em dicionários/listas.
 """
 
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import sqlite3
 
 __all__ = [
@@ -27,21 +27,49 @@ def to_number(value: Any) -> float:
         return 0.0
 
 
-def balancete(db: sqlite3.Connection, data_inicio: str, data_fim: str) -> List[Dict[str, Any]]:
+def _table_columns(db: sqlite3.Connection, table_name: str) -> set[str]:
+    cur = db.cursor()
+    cur.execute(f"PRAGMA table_info({table_name})")
+    return {row[1] for row in cur.fetchall()}
+
+
+def _optional_column(columns: set[str], column_name: str) -> str:
+    if column_name in columns:
+        return f"c.{column_name}"
+    return f"NULL AS {column_name}"
+
+
+def _empresa_filter(columns: set[str], empresa_id: Optional[int]) -> tuple[str, list[Any]]:
+    if empresa_id is None:
+        return "", []
+    if "empresa_id" in columns:
+        return "AND c.empresa_id = ?", [empresa_id]
+    return "", []
+
+
+def balancete(
+    db: sqlite3.Connection,
+    data_inicio: str,
+    data_fim: str,
+    empresa_id: Optional[int] = None,
+) -> List[Dict[str, Any]]:
     """
     Retorna lista de contas com debitos, creditos e saldo entre datas.
     data_inicio and data_fim devem ser strings compatíveis com o formato da coluna l.data.
     """
-    sql = """
+    columns = _table_columns(db, "plano_contas")
+    empresa_filter, empresa_params = _empresa_filter(columns, empresa_id)
+
+    sql = f"""
     SELECT 
       c.id,
       c.codigo,
       c.descricao,
       c.natureza,
-      c.grupo,
-      c.dre_grupo,
-      c.subgrupo,
-      c.fluxo_caixa_tipo,
+      {_optional_column(columns, 'grupo')},
+      {_optional_column(columns, 'dre_grupo')},
+      {_optional_column(columns, 'subgrupo')},
+      {_optional_column(columns, 'fluxo_caixa_tipo')},
 
       SUM(CASE WHEN li.tipo='D' THEN li.valor ELSE 0 END) AS debitos,
       SUM(CASE WHEN li.tipo='C' THEN li.valor ELSE 0 END) AS creditos
@@ -51,12 +79,13 @@ def balancete(db: sqlite3.Connection, data_inicio: str, data_fim: str) -> List[D
     LEFT JOIN lancamento l ON l.id = li.lancamento_id
 
     WHERE l.data BETWEEN ? AND ?
+    {empresa_filter}
     GROUP BY c.id
     ORDER BY c.codigo
     """
 
     cur = db.cursor()
-    cur.execute(sql, (data_inicio, data_fim))
+    cur.execute(sql, [data_inicio, data_fim, *empresa_params])
     rows = cur.fetchall()
 
     # Ensure rows are accessible by name if using row_factory; otherwise map manually
@@ -83,8 +112,13 @@ def balancete(db: sqlite3.Connection, data_inicio: str, data_fim: str) -> List[D
     return result
 
 
-def balanco_patrimonial(db: sqlite3.Connection, data_inicio: str, data_fim: str) -> Dict[str, Any]:
-    dados = balancete(db, data_inicio, data_fim)
+def balanco_patrimonial(
+    db: sqlite3.Connection,
+    data_inicio: str,
+    data_fim: str,
+    empresa_id: Optional[int] = None,
+) -> Dict[str, Any]:
+    dados = balancete(db, data_inicio, data_fim, empresa_id=empresa_id)
 
     ativo = []
     passivo = []
@@ -114,8 +148,13 @@ def balanco_patrimonial(db: sqlite3.Connection, data_inicio: str, data_fim: str)
     }
 
 
-def dre(db: sqlite3.Connection, data_inicio: str, data_fim: str) -> Dict[str, float]:
-    dados = balancete(db, data_inicio, data_fim)
+def dre(
+    db: sqlite3.Connection,
+    data_inicio: str,
+    data_fim: str,
+    empresa_id: Optional[int] = None,
+) -> Dict[str, float]:
+    dados = balancete(db, data_inicio, data_fim, empresa_id=empresa_id)
 
     grupos = {}
     for c in dados:
@@ -140,8 +179,13 @@ def dre(db: sqlite3.Connection, data_inicio: str, data_fim: str) -> Dict[str, fl
     }
 
 
-def dva(db: sqlite3.Connection, data_inicio: str, data_fim: str) -> Dict[str, Any]:
-    dados = balancete(db, data_inicio, data_fim)
+def dva(
+    db: sqlite3.Connection,
+    data_inicio: str,
+    data_fim: str,
+    empresa_id: Optional[int] = None,
+) -> Dict[str, Any]:
+    dados = balancete(db, data_inicio, data_fim, empresa_id=empresa_id)
 
     receitas = 0.0
     insumos = 0.0
@@ -178,8 +222,13 @@ def dva(db: sqlite3.Connection, data_inicio: str, data_fim: str) -> Dict[str, An
     }
 
 
-def dfc(db: sqlite3.Connection, data_inicio: str, data_fim: str) -> Dict[str, float]:
-    dados = balancete(db, data_inicio, data_fim)
+def dfc(
+    db: sqlite3.Connection,
+    data_inicio: str,
+    data_fim: str,
+    empresa_id: Optional[int] = None,
+) -> Dict[str, float]:
+    dados = balancete(db, data_inicio, data_fim, empresa_id=empresa_id)
 
     operacional = 0.0
     investimento = 0.0

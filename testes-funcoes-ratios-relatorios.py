@@ -27,6 +27,7 @@ def setup_db():
     cur.executescript("""
     CREATE TABLE plano_contas (
         id INTEGER PRIMARY KEY,
+        empresa_id INTEGER,
         codigo TEXT,
         descricao TEXT,
         natureza TEXT,
@@ -38,6 +39,7 @@ def setup_db():
 
     CREATE TABLE lancamento (
         id INTEGER PRIMARY KEY,
+        empresa_id INTEGER,
         data TEXT
     );
 
@@ -52,22 +54,23 @@ def setup_db():
 
     # Inserir contas de exemplo
     contas = [
-        (1, '1.1.1', 'Caixa', 'D', 'ATIVO', None, None, None),
-        (2, '2.1.1', 'Fornecedores', 'C', 'PASSIVO', None, None, None),
-        (3, '3.1.1', 'Patrimonio', 'C', 'PL', None, None, None),
-        (4, '4.1.1', 'Receita', 'C', None, 'RECEITA_BRUTA', 'RECEITAS', None),
-        (5, '5.1.1', 'Custo', 'D', None, 'CUSTO', 'INSUMOS', None),
+        (1, 1, '1.1.1', 'Caixa', 'D', 'ATIVO', None, None, None),
+        (2, 1, '2.1.1', 'Fornecedores', 'C', 'PASSIVO', None, None, None),
+        (3, 1, '3.1.1', 'Patrimonio', 'C', 'PL', None, None, None),
+        (4, 1, '4.1.1', 'Receita', 'C', None, 'RECEITA_BRUTA', 'RECEITAS', None),
+        (5, 1, '5.1.1', 'Custo', 'D', None, 'CUSTO', 'INSUMOS', None),
+        (6, 2, '1.1.2', 'Banco Empresa 2', 'D', 'ATIVO', None, None, None),
     ]
 
     for t in contas:
-        # Note: ordem dos campos: id,codigo,descricao,natureza,grupo,dre_grupo,subgrupo,fluxo_caixa_tipo
+        # Note: ordem dos campos: id,empresa_id,codigo,descricao,natureza,grupo,dre_grupo,subgrupo,fluxo_caixa_tipo
         cur.execute(
-            "INSERT INTO plano_contas (id,codigo,descricao,natureza,grupo,dre_grupo,subgrupo,fluxo_caixa_tipo) VALUES (?,?,?,?,?,?,?,?)",
+            "INSERT INTO plano_contas (id,empresa_id,codigo,descricao,natureza,grupo,dre_grupo,subgrupo,fluxo_caixa_tipo) VALUES (?,?,?,?,?,?,?,?,?)",
             t,
         )
 
     # Inserir um lançamento e itens
-    cur.execute("INSERT INTO lancamento (id,data) VALUES (1,'2022-01-15')")
+    cur.execute("INSERT INTO lancamento (id,empresa_id,data) VALUES (1,1,'2022-01-15')")
 
     itens = [
         (1, 1, 1, 'D', 1000.0),  # debita caixa
@@ -106,6 +109,11 @@ def test_reports():
     dfc = frp.dfc(conn, '2022-01-01', '2022-12-31')
     print("- DFC:")
     pprint(dfc)
+
+    bal_empresa = frp.balancete(conn, '2022-01-01', '2022-12-31', empresa_id=1)
+    print("- Balancete filtrado por empresa:")
+    pprint(bal_empresa)
+    assert all(item['id'] != 6 for item in bal_empresa)
 
     print("Todos os testes em memória passaram.")
 
