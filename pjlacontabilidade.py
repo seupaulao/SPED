@@ -667,11 +667,13 @@ def visualizar_lancamentos(conn: sqlite3.Connection, empresa: sqlite3.Row, pause
     rows = fetch_all(
         conn,
         """
-        SELECT id, data, numero, historico, valor_total
-        FROM lancamento
-        WHERE empresa_id = ?
-        ORDER BY data DESC, id DESC
-        LIMIT 20
+
+        select lan.id, lan.numero, conta.codigo, lan.data, conta.descricao, item.tipo, item.valor 
+        from lancamento as lan inner join lancamento_item item on lan.id = item.lancamento_id,
+        plano_contas as conta on conta.id = item.conta_id
+        where lan.empresa_id = ?
+        ORDER BY lan.data DESC, lan.id DESC
+        LIMIT 10
         """,
         (empresa["id"],),
     )
@@ -682,12 +684,12 @@ def visualizar_lancamentos(conn: sqlite3.Connection, empresa: sqlite3.Row, pause
             print("\nNenhum lançamento encontrado para esta empresa.")
         return
 
-    print("\nID | DATA | NUMERO | HISTORICO | VALOR")
+    print("\nID | NUMERO | CODIGO | DATA | DESCRICAO | TIPO | VALOR")
     print("-" * 90)
     for row in rows:
         print(
-            f"{row['id']:>2} | {display_date(row['data'])} | {(row['numero'] or ''):<10.10} | "
-            f"{(row['historico'] or ''):<40.40} | {format_currency(row['valor_total'])}"
+            f"{row['id']:>2} | {(row['numero'] or ''):<10.10} | {(row['codigo'] or ''):<10.10} | {display_date(row['data'])} | "
+            f"{(row['descricao'] or ''):<40.40} | {(row['tipo'] or ''):<5.5} | {format_currency(row['valor'])}"
         )
     if pause_after:
         pause()

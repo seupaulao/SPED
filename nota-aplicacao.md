@@ -272,7 +272,7 @@ Usar a consulta
 select lan.id, lan.numero, conta.codigo, lan.data, conta.descricao, item.tipo, item.valor 
 from lancamento as lan inner join lancamento_item item on lan.id = item.lancamento_id,
                    plano_contas as conta on conta.id = item.conta_id
-where empresa_id = ID_DA_EMPRESA
+where lan.empresa_id = ID_DA_EMPRESA
 ```
 
 - `ID`
