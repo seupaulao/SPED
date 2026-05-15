@@ -844,13 +844,78 @@ def nova_conta(conn: sqlite3.Connection) -> None:
         return    
     
 def editar_conta(conn: sqlite3.Connection) -> None:
-    return
-def excluir_conta(conn: sqlite3.Connection) -> None:
-    return
+    codigo = input("Qual o código da conta que deseja editar? Digite '.' para voltar ao submenu: ").strip()
+    if codigo == ".":
+        return
+
+    conta = fetch_one(conn, "SELECT * FROM plano_contas WHERE codigo = ?", (codigo,))
+    if not conta:
+        pause("Conta não encontrada. Clique ENTER para voltar ao submenu.")
+        return
+
+    print("\nConta encontrada:")
+    print(f"Código: {conta['codigo']}")
+    print(f"Descrição: {conta['descricao']}")
+    print(f"Tipo: {conta['tipo']}")
+    print(f"Natureza: {conta['natureza']}")
+
+    descricao = input("Nova descrição (ou ENTER para manter): ").strip() or conta['descricao']
+    tipo = input("Novo tipo [A/S] (ou ENTER para manter): ").strip().upper() or conta['tipo']
+    natureza = input("Nova natureza [D/C] (ou ENTER para manter): ").strip().upper() or conta['natureza']
+
+    try:
+        conn.execute(
+            """
+            UPDATE plano_contas
+            SET descricao = ?, tipo = ?, natureza = ?
+            WHERE codigo = ?
+            """,
+            (descricao, tipo, natureza, codigo),
+        )
+        conn.commit()
+        pause("Conta atualizada com sucesso. Clique ENTER para voltar ao submenu.")
+    except sqlite3.DatabaseError as exc:
+        conn.rollback()
+        pause(f"Erro ao atualizar conta: {exc}. Clique ENTER para voltar ao submenu.")
+
 def detalhar_conta(conn: sqlite3.Connection) -> None:
-    return
+    codigo = input("Qual o código da conta que deseja detalhar? Digite '.' para voltar ao submenu: ").strip()
+    if codigo == ".":
+        return
+
+    conta = fetch_one(conn, "SELECT * FROM plano_contas WHERE codigo = ?", (codigo,))
+    if not conta:
+        pause("Conta não encontrada. Clique ENTER para voltar ao submenu.")
+        return
+
+    print("\nDetalhes da conta:")
+    print(f"Código: {conta['codigo']}")
+    print(f"Descrição: {conta['descricao']}")
+    print(f"Tipo: {conta['tipo']}")
+    print(f"Natureza: {conta['natureza']}")
+    print(f"Grupo: {conta['grupo']}")
+    print(f"DRE Grupo: {conta['dre_grupo']}")
+    print(f"Subgrupo: {conta['subgrupo']}")
+    print(f"Fluxo Caixa Tipo: {conta['fluxo_caixa_tipo']}")
+    print(f"Nível: {conta['nivel']}")
+    print(f"Conta Pai ID: {conta['conta_pai_id']}")
+    print(f"Código Referencial: {conta['codigo_referencial']}")
+    print(f"Aceita Lançamento: {conta['aceita_lancamento']}")
+    print(f"Criado em: {conta['created_at']}")
+    pause("Clique ENTER para voltar ao submenu.")
+
 def listar_contas(conn: sqlite3.Connection) -> None:
-    return                
+    rows = fetch_all(conn, "SELECT codigo, descricao, tipo, natureza FROM plano_contas ORDER BY codigo")
+    if not rows:
+        pause("Nenhuma conta encontrada. Clique ENTER para voltar ao submenu.")
+        return
+
+    print("\nCÓDIGO | DESCRIÇÃO | TIPO | NATUREZA")
+    print("-" * 50)
+    for row in rows:
+        print(f"{row['codigo']:<10} | {row['descricao']:<20} | {row['tipo']:<4} | {row['natureza']:<8}")
+    pause("Clique ENTER para voltar ao submenu.")
+
 
 def menu_plano_contas(conn: sqlite3.Connection) -> None:
     while True:
@@ -872,7 +937,8 @@ def menu_plano_contas(conn: sqlite3.Connection) -> None:
         elif choice == "b":
             editar_conta(conn)
         elif choice == "c":
-            excluir_conta(conn)
+            # excluir_conta(conn)
+            pass
         elif choice == "d":
             detalhar_conta(conn)
         elif choice == "e":
