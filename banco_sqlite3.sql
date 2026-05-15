@@ -32,29 +32,16 @@ CREATE TABLE plano_contas (
   FOREIGN KEY (conta_pai_id) REFERENCES plano_contas(id)
 );
 
--- verificar o uso na aplicação para essa tabela
--- se no lançamento eu tenho um historico para que essa tabela
-CREATE TABLE historico_padrao (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  empresa_id INTEGER,
-  codigo TEXT,
-  descricao TEXT NOT NULL,
-
-  FOREIGN KEY (empresa_id) REFERENCES empresa(id)
-);
-
 CREATE TABLE lancamento (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   empresa_id INTEGER,
   data TEXT NOT NULL,
   numero TEXT,                 -- esse campo pode estar denro do campo abaixo
   historico TEXT,              -- numero e historico são um só campo 
-  historico_padrao_id INTEGER, -- campo desnecessario caso tabela seja excluida
   tipo TEXT DEFAULT 'N',       -- N - Normal, E - Estorno, A - Ajuste
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
 
-  FOREIGN KEY (empresa_id) REFERENCES empresa(id),
-  FOREIGN KEY (historico_padrao_id) REFERENCES historico_padrao(id)
+  FOREIGN KEY (empresa_id) REFERENCES empresa(id)
 );
 
 CREATE TABLE lancamento_item (
@@ -62,7 +49,7 @@ CREATE TABLE lancamento_item (
   lancamento_id INTEGER,
   conta_id INTEGER,
   tipo TEXT NOT NULL, -- D ou C
-  valor REAL NOT NULL
+  valor REAL NOT NULL,
 
   FOREIGN KEY (lancamento_id) REFERENCES lancamento(id) ON DELETE CASCADE,
   FOREIGN KEY (conta_id) REFERENCES plano_contas(id)

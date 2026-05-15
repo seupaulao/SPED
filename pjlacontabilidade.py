@@ -301,7 +301,7 @@ def excluir_empresa(conn: sqlite3.Connection) -> None:
             (empresa["id"],),
         )
         conn.execute("DELETE FROM lancamento WHERE empresa_id = ?", (empresa["id"],))
-        conn.execute("DELETE FROM historico_padrao WHERE empresa_id = ?", (empresa["id"],))
+
         conn.execute("DELETE FROM plano_contas WHERE empresa_id = ?", (empresa["id"],))
         conn.execute("DELETE FROM empresa WHERE id = ?", (empresa["id"],))
         conn.commit()
@@ -690,9 +690,6 @@ def visualizar_lancamentos(conn: sqlite3.Connection, empresa: sqlite3.Row, pause
     if pause_after:
         pause()
 
-## TODO - registrar no historico_padrao ou optar por apagar tabela
-def registrar_historico_padrao(conn, empresa, items):
-    return
 
 ## TODO - criar lancamentos de estorno e ajuste
 def criar_lancamento_estorno(conn, empresa):
@@ -712,7 +709,7 @@ def menu_livro_diario(conn: sqlite3.Connection) -> None:
         print("[d] Visualizar todos os Lançamentos")
         print("[e] Lançamento Estorno")
         print("[f] Lançamento Ajuste")
-        print("[v] Voltar ao menu principal")
+        print("[q] Voltar ao menu principal")
         choice = input("\nEscolha: ").strip().lower()
         if choice == "a":
             criar_lancamento(conn, empresa)
@@ -726,7 +723,7 @@ def menu_livro_diario(conn: sqlite3.Connection) -> None:
             criar_lancamento_estorno(conn, empresa)
         elif choice == "f":
             criar_lancamento_ajuste(conn, empresa)
-        elif choice == "v":
+        elif choice == "q":
             return
         else:
             pause("Opção inválida. Clique ENTER para tentar novamente.")
@@ -784,9 +781,9 @@ def menu_relatorios(conn: sqlite3.Connection) -> None:
         print("[c] Balanço Patrimonial")
         print("[d] DRE")
         print("[e] DVA")
-        print("[f] Voltar")
+        print("[q] Voltar")
         choice = input("\nEscolha: ").strip().lower()
-        if choice == "f":
+        if choice == "q":
             return
         if choice not in {"b", "c", "d", "e"}:
             pause("Opção inválida. Clique ENTER para tentar novamente.")
@@ -814,6 +811,22 @@ def menu_relatorios(conn: sqlite3.Connection) -> None:
 
 ## criar metodos para trabalhar com o PLANO DE CONTAS
 def nova_conta(conn: sqlite3.Connection) -> None:
+    empresaId = input('Qual o Codigo da empresa?')
+    codigo = input('Qual o codigo da conta? Formato 01.01.01')
+    descricao = input('Qual a descricao da conta? Formato TIPO:CONTA:SUBCONTA')
+    tipo = input('Conta eh [A]Analitica? Conta eh [S]intetica?')
+    natureza = input('Natureza da Conta eh [D]evedora ou [C]redora') # D ou C
+    grupo = input('Grupo da Conta?')
+    dre_grupo = input('Grupo DRE?')
+    subgrupo  = input('Subgrupo?')
+    fluxo_caixa_tipo  = input('Tipo Fluxo Caixa?')
+    nivel  = input('Nivel?')
+    conta_pai_id  = input('Conta PAI?')
+    codigo_referencial  = input('Codigo Referencial?')
+    aceita_lancamento = 1
+    created_at = input("Data da Criação da conta [DD/MM/AAAA]: ").strip()
+    ## operacoes de banco
+    ## mensagem que foi salva com sucesso ou procedeu erro
     return
 def editar_conta(conn: sqlite3.Connection) -> None:
     return
@@ -832,9 +845,9 @@ def menu_plano_contas(conn: sqlite3.Connection) -> None:
         print("[c] Excluir Conta")
         print("[d] Detalhar Conta")
         print("[e] Listar todas as contas")
-        print("[f] Voltar")
+        print("[q] Voltar")
         choice = input("\nEscolha: ").strip().lower()
-        if choice == "f":
+        if choice == "q":
             return
         if choice not in {"a","b", "c", "d", "e"}:
             pause("Opção inválida. Clique ENTER para tentar novamente.")
