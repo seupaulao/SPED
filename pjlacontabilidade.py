@@ -811,30 +811,30 @@ def menu_relatorios(conn: sqlite3.Connection) -> None:
 
 ## criar metodos para trabalhar com o PLANO DE CONTAS
 def nova_conta(conn: sqlite3.Connection) -> None:
-    empresa_id = input('Qual o Codigo da empresa?')
-    codigo = input('Qual o codigo da conta? Formato 01.01.01')
-    descricao = input('Qual a descricao da conta? Formato TIPO:CONTA:SUBCONTA')
-    tipo = input('Conta eh [A]Analitica? Conta eh [S]intetica?')
-    natureza = input('Natureza da Conta eh [D]evedora ou [C]redora') # D ou C
-    grupo = input('Grupo da Conta?')
-    dre_grupo = input('Grupo DRE?')
-    subgrupo  = input('Subgrupo?')
-    fluxo_caixa_tipo  = input('Tipo Fluxo Caixa?')
-    nivel  = input('Nivel?')
-    conta_pai_id  = input('Conta PAI?')
-    codigo_referencial  = input('Codigo Referencial?')
+    empresa_id = input('Qual o Codigo da empresa? -> ')
+    codigo = input('Qual o codigo da conta? Formato 01.01.01 -> ')
+    descricao = input('Qual a descricao da conta? Formato TIPO:CONTA:SUBCONTA -> ')
+    tipo = input('Conta eh [A]Analitica? Conta eh [S]intetica? -> ')
+    natureza = input('Natureza da Conta eh [D]evedora ou [C]redora -> ') # D ou C
+    grupo = input('Grupo da Conta? -> ')
+    dre_grupo = input('Grupo DRE? -> ')
+    subgrupo  = input('Subgrupo? -> ')
+    fluxo_caixa_tipo  = input('Tipo Fluxo Caixa? -> ')
+    nivel  = input('Nivel? -> ')
+    conta_pai_id  = input('Conta PAI? -> ')
+    codigo_referencial  = input('Codigo Referencial? -> ')
     aceita_lancamento = 1
-    created_at = input("Data da Criação da conta [DD/MM/AAAA]: ").strip()
+#    created_at = input("Data da Criação da conta [DD/MM/AAAA]: ").strip()
     ## operacoes de banco
     try:
         conn.execute("BEGIN")
         cur = conn.cursor()
         cur.execute(
         """
-        INSERT INTO plano_contas (empresa_id, codigo, descricao, tipo, natureza, grupo, dre_grupo, subgrupo, fluxo_caixa_tipo, nivel, conta_pai_id, codigo_referencial, aceita_lancamento, created_at)
-        VALUES (?, ?, ?, ?, ? , ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO plano_contas (empresa_id, codigo, descricao, tipo, natureza, grupo, dre_grupo, subgrupo, fluxo_caixa_tipo, nivel, conta_pai_id, codigo_referencial, aceita_lancamento)
+        VALUES (?, ?, ?, ?, ? , ?, ?, ?, ?, ?, ?, ?, ?)
         """,
-        (empresa_id, codigo, descricao, tipo, natureza, grupo, dre_grupo, subgrupo, fluxo_caixa_tipo, nivel, conta_pai_id, codigo_referencial, aceita_lancamento, created_at),
+        (empresa_id, codigo, descricao, tipo, natureza, grupo, dre_grupo, subgrupo, fluxo_caixa_tipo, nivel, conta_pai_id, codigo_referencial, aceita_lancamento),
         )    
         conn.commit()
         print("Conta salva com sucesso.")
