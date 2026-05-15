@@ -7,6 +7,7 @@ escritório contábil offline
 
 # next steps
 - fazer lancamento de estorno e ajuste
+  - verificar [texto ajuda sobre estorno](sobre_apagar_editar.md)
 - CRUD plano de contas
 - tabela de-para SPED e plano de contas
 - calcular lucro presumido e simples nacional
