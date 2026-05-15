@@ -811,7 +811,7 @@ def menu_relatorios(conn: sqlite3.Connection) -> None:
 
 ## criar metodos para trabalhar com o PLANO DE CONTAS
 def nova_conta(conn: sqlite3.Connection) -> None:
-    empresaId = input('Qual o Codigo da empresa?')
+    empresa_id = input('Qual o Codigo da empresa?')
     codigo = input('Qual o codigo da conta? Formato 01.01.01')
     descricao = input('Qual a descricao da conta? Formato TIPO:CONTA:SUBCONTA')
     tipo = input('Conta eh [A]Analitica? Conta eh [S]intetica?')
@@ -826,8 +826,23 @@ def nova_conta(conn: sqlite3.Connection) -> None:
     aceita_lancamento = 1
     created_at = input("Data da Criação da conta [DD/MM/AAAA]: ").strip()
     ## operacoes de banco
-    ## mensagem que foi salva com sucesso ou procedeu erro
-    return
+    try:
+        conn.execute("BEGIN")
+        cur = conn.cursor()
+        cur.execute(
+        """
+        INSERT INTO plano_contas (empresa_id, codigo, descricao, tipo, natureza, grupo, dre_grupo, subgrupo, fluxo_caixa_tipo, nivel, conta_pai_id, codigo_referencial, aceita_lancamento, created_at)
+        VALUES (?, ?, ?, ?, ? , ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (empresa_id, codigo, descricao, tipo, natureza, grupo, dre_grupo, subgrupo, fluxo_caixa_tipo, nivel, conta_pai_id, codigo_referencial, aceita_lancamento, created_at),
+        )    
+        conn.commit()
+        print("Conta salva com sucesso.")
+    except sqlite3.DatabaseError as exc:
+        conn.rollback()
+        pause(f"Erro ao salvar conta: {exc}. Clique ENTER para voltar ao submenu.")
+        return    
+    
 def editar_conta(conn: sqlite3.Connection) -> None:
     return
 def excluir_conta(conn: sqlite3.Connection) -> None:
