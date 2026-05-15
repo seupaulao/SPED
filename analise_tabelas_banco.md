@@ -190,9 +190,6 @@ Armazena o **cabeçalho** de cada lançamento contábil. Um lançamento é compo
 - **`historico_padrao_id`** (INTEGER, FOREIGN KEY)  
   Referência a um histórico pré-configurado. Permite vincular um modelo de descrição ao lançamento.
 
-- **`valor_total`** (REAL)  
-  Valor total do lançamento (soma dos débitos ou créditos, que devem ser iguais em partidas dobradas). Desnormalizado para aceleração de consultas.
-
 - **`tipo`** (TEXT DEFAULT 'N')  
   Tipo de lançamento:
   - `N` = Normal (lançamento padrão)

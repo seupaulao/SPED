@@ -33,8 +33,7 @@ def setup_db():
             empresa_id INTEGER,
             data TEXT NOT NULL,
             numero TEXT,
-            historico TEXT,
-            valor_total REAL
+            historico TEXT
         );
 
         CREATE TABLE lancamento_item (
@@ -42,8 +41,7 @@ def setup_db():
             lancamento_id INTEGER,
             conta_id INTEGER,
             tipo TEXT NOT NULL,
-            valor REAL NOT NULL,
-            historico TEXT
+            valor REAL NOT NULL
         );
         """
     )
@@ -59,13 +57,13 @@ def setup_db():
         "INSERT INTO plano_contas (id, empresa_id, codigo, descricao, tipo, natureza, nivel, aceita_lancamento) VALUES (3, 1, '1.1.2', 'Banco', 'A', 'D', 3, 1)"
     )
     conn.execute(
-        "INSERT INTO lancamento (id, empresa_id, data, numero, historico, valor_total) VALUES (1, 1, '2024-01-10', 'DOC1', 'Venda inicial', 100.0)"
+        "INSERT INTO lancamento (id, empresa_id, data, numero, historico) VALUES (1, 1, '2024-01-10', 'DOC1', 'Venda inicial')"
     )
     conn.execute(
-        "INSERT INTO lancamento_item (id, lancamento_id, conta_id, tipo, valor, historico) VALUES (1, 1, 1, 'D', 100.0, 'Venda inicial')"
+        "INSERT INTO lancamento_item (id, lancamento_id, conta_id, tipo, valor) VALUES (1, 1, 1, 'D', 100.0)"
     )
     conn.execute(
-        "INSERT INTO lancamento_item (id, lancamento_id, conta_id, tipo, valor, historico) VALUES (2, 1, 2, 'C', 100.0, 'Venda inicial')"
+        "INSERT INTO lancamento_item (id, lancamento_id, conta_id, tipo, valor) VALUES (2, 1, 2, 'C', 100.0)"
     )
     conn.commit()
     return conn
@@ -90,7 +88,6 @@ def test_replace_lancamento():
     assert lancamento["data"] == "2024-02-05"
     assert lancamento["numero"] == "DOC2"
     assert lancamento["historico"] == "Venda corrigida"
-    assert lancamento["valor_total"] == 150.0
     assert len(fetched_items) == 2
     assert fetched_items[0]["conta_id"] == 3
     assert fetched_items[1]["conta_id"] == 2

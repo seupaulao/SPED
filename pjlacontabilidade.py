@@ -416,7 +416,6 @@ def prompt_lancamento_header_edicao(existing: sqlite3.Row) -> Optional[dict[str,
 def prompt_lancamento_items(
     conn: sqlite3.Connection,
     empresa: sqlite3.Row,
-    historico_padrao: Optional[str],
 ) -> list[dict[str, Any]]:
     print("\nIniciar os lançamentos")
     items: list[dict[str, Any]] = []
@@ -451,8 +450,7 @@ def prompt_lancamento_items(
                 "conta_codigo": account["codigo"],
                 "conta_descricao": account["descricao"],
                 "tipo": entry_type,
-                "valor": amount,
-                "historico": historico_padrao,
+                "valor": amount
             }
         )
         print(f"{entry_type} | {account['codigo']} - {account['descricao']} | {format_currency(amount)}")
@@ -478,7 +476,7 @@ def fetch_lancamento(conn: sqlite3.Connection, empresa_id: int, lancamento_id: A
     return fetch_one(
         conn,
         """
-        SELECT id, empresa_id, data, numero, historico, valor_total
+        SELECT id, empresa_id, data, numero, historico
         FROM lancamento
         WHERE empresa_id = ? AND id = ?
         """,
@@ -506,7 +504,6 @@ def print_lancamento_detalhes(conn: sqlite3.Connection, lancamento: sqlite3.Row)
     print(f"Data: {display_date(lancamento['data'])}")
     print(f"Número: {lancamento['numero'] or ''}")
     print(f"Histórico: {lancamento['historico'] or ''}")
-    print(f"Valor total: {format_currency(lancamento['valor_total'])}")
     print("Itens:")
     for item in fetch_lancamento_items(conn, lancamento["id"]):
         print(
@@ -528,23 +525,23 @@ def choose_lancamento(conn: sqlite3.Connection, empresa: sqlite3.Row, action_lab
 
 
 def save_lancamento(conn: sqlite3.Connection, empresa_id: int, header: dict[str, Any], items: list[dict[str, Any]]) -> None:
-    total = sum(item["valor"] for item in items if item["tipo"] == "D")
+   # total = sum(item["valor"] for item in items if item["tipo"] == "D")
     cur = conn.cursor()
     cur.execute(
         """
-        INSERT INTO lancamento (empresa_id, data, numero, historico, valor_total)
+        INSERT INTO lancamento (empresa_id, data, numero, historico)
         VALUES (?, ?, ?, ?, ?)
         """,
-        (empresa_id, header["data"], header["numero"], header["historico"], total),
+        (empresa_id, header["data"], header["numero"], header["historico"]),
     )
     lancamento_id = cur.lastrowid
     for item in items:
         cur.execute(
             """
-            INSERT INTO lancamento_item (lancamento_id, conta_id, tipo, valor, historico)
+            INSERT INTO lancamento_item (lancamento_id, conta_id, tipo, valor)
             VALUES (?, ?, ?, ?, ?)
             """,
-            (lancamento_id, item["conta_id"], item["tipo"], item["valor"], item["historico"]),
+            (lancamento_id, item["conta_id"], item["tipo"], item["valor"]),
         )
 
 
@@ -555,23 +552,22 @@ def replace_lancamento(
     header: dict[str, Any],
     items: list[dict[str, Any]],
 ) -> None:
-    total_debitos, _ = summarize_items(items)
     conn.execute(
         """
         UPDATE lancamento
-        SET data = ?, numero = ?, historico = ?, valor_total = ?
+        SET data = ?, numero = ?, historico = ?
         WHERE id = ? AND empresa_id = ?
         """,
-        (header["data"], header["numero"], header["historico"], total_debitos, lancamento_id, empresa_id),
+        (header["data"], header["numero"], header["historico"], lancamento_id, empresa_id),
     )
     conn.execute("DELETE FROM lancamento_item WHERE lancamento_id = ?", (lancamento_id,))
     for item in items:
         conn.execute(
             """
-            INSERT INTO lancamento_item (lancamento_id, conta_id, tipo, valor, historico)
+            INSERT INTO lancamento_item (lancamento_id, conta_id, tipo, valor)
             VALUES (?, ?, ?, ?, ?)
             """,
-            (lancamento_id, item["conta_id"], item["tipo"], item["valor"], item["historico"]),
+            (lancamento_id, item["conta_id"], item["tipo"], item["valor"]),
         )
 
 
@@ -588,7 +584,7 @@ def criar_lancamento(conn: sqlite3.Connection, empresa: sqlite3.Row) -> None:
         if header is None:
             return
 
-        items = prompt_lancamento_items(conn, empresa, header["historico"])
+        items = prompt_lancamento_items(conn, empresa)
 
         if not items:
             return
@@ -622,7 +618,7 @@ def corrigir_lancamento(conn: sqlite3.Connection, empresa: sqlite3.Row) -> None:
         return
 
     print("\nOs itens do lançamento serão digitados novamente.")
-    items = prompt_lancamento_items(conn, empresa, header["historico"])
+    items = prompt_lancamento_items(conn, empresa)
     if not items:
         pause("Nenhuma partida informada. Clique ENTER para voltar ao submenu.")
         return
@@ -684,16 +680,26 @@ def visualizar_lancamentos(conn: sqlite3.Connection, empresa: sqlite3.Row, pause
             print("\nNenhum lançamento encontrado para esta empresa.")
         return
 
-    print("\nID | NUMERO | CODIGO | DATA | DESCRICAO | TIPO | VALOR")
+    print("\nID | CODIGO | DATA | DESCRICAO | TIPO | VALOR")
     print("-" * 90)
     for row in rows:
         print(
-            f"{row['id']:>2} | {(row['numero'] or ''):<10.10} | {(row['codigo'] or ''):<10.10} | {display_date(row['data'])} | "
+            f"{row['id']:>2} | {(row['codigo'] or ''):<10.10} | {display_date(row['data'])} | "
             f"{(row['descricao'] or ''):<40.40} | {(row['tipo'] or ''):<5.5} | {format_currency(row['valor'])}"
         )
     if pause_after:
         pause()
 
+## TODO - registrar no historico_padrao ou optar por apagar tabela
+def registrar_historico_padrao(conn, empresa, items):
+    return
+
+## TODO - criar lancamentos de estorno e ajuste
+def criar_lancamento_estorno(conn, empresa):
+    return 
+
+def criar_lancamento_ajuste(conn, empresa):
+    return
 
 def menu_livro_diario(conn: sqlite3.Connection) -> None:
     empresa = ask_empresa(conn)
@@ -704,7 +710,9 @@ def menu_livro_diario(conn: sqlite3.Connection) -> None:
         print("[b] Corrigir Lançamento")
         print("[c] Apagar Lançamento")
         print("[d] Visualizar todos os Lançamentos")
-        print("[e] Voltar ao menu principal")
+        print("[e] Lançamento Estorno")
+        print("[f] Lançamento Ajuste")
+        print("[v] Voltar ao menu principal")
         choice = input("\nEscolha: ").strip().lower()
         if choice == "a":
             criar_lancamento(conn, empresa)
@@ -715,6 +723,10 @@ def menu_livro_diario(conn: sqlite3.Connection) -> None:
         elif choice == "d":
             visualizar_lancamentos(conn, empresa)
         elif choice == "e":
+            criar_lancamento_estorno(conn, empresa)
+        elif choice == "f":
+            criar_lancamento_ajuste(conn, empresa)
+        elif choice == "v":
             return
         else:
             pause("Opção inválida. Clique ENTER para tentar novamente.")
@@ -800,6 +812,43 @@ def menu_relatorios(conn: sqlite3.Connection) -> None:
             print_key_values("DVA", result)
             pause()
 
+## criar metodos para trabalhar com o PLANO DE CONTAS
+def nova_conta(conn: sqlite3.Connection) -> None:
+    return
+def editar_conta(conn: sqlite3.Connection) -> None:
+    return
+def excluir_conta(conn: sqlite3.Connection) -> None:
+    return
+def detalhar_conta(conn: sqlite3.Connection) -> None:
+    return
+def listar_contas(conn: sqlite3.Connection) -> None:
+    return                
+
+def menu_plano_contas(conn: sqlite3.Connection) -> None:
+    while True:
+        print("\n")
+        print("[a] Nova Conta")
+        print("[b] Editar Conta")
+        print("[c] Excluir Conta")
+        print("[d] Detalhar Conta")
+        print("[e] Listar todas as contas")
+        print("[f] Voltar")
+        choice = input("\nEscolha: ").strip().lower()
+        if choice == "f":
+            return
+        if choice not in {"a","b", "c", "d", "e"}:
+            pause("Opção inválida. Clique ENTER para tentar novamente.")
+            continue
+        elif choice == "a":
+            nova_conta(conn)
+        elif choice == "b":
+            editar_conta(conn)
+        elif choice == "c":
+            excluir_conta(conn)
+        elif choice == "d":
+            detalhar_conta(conn)
+        elif choice == "e":
+            listar_contas(conn)
 
 def menu_ecd(conn: sqlite3.Connection) -> None:
     empresa = ask_empresa(conn)
@@ -817,6 +866,7 @@ def main() -> None:
             print("[b] Relatórios")
             print("[c] Cadastro Empresa")
             print("[d] Gerar ECD")
+            print("[e] Plano de Contas")
             print("[q] Sair")
 
             choice = input("\nEscolha: ").strip().lower()
@@ -828,6 +878,8 @@ def main() -> None:
                 menu_cadastro_empresa(conn)
             elif choice == "d":
                 menu_ecd(conn)
+            elif choice == "e":
+                menu_plano_contas(conn)    
             elif choice == "q":
                 return
             else:
