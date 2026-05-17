@@ -3,7 +3,7 @@ from __future__ import annotations
 import sqlite3
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Iterable, Optional
+from typing import Any, Callable, Iterable, Optional
 
 from textual.app import ComposeResult, SystemCommand
 from textual.containers import Container, Horizontal, Vertical, ScrollableContainer
@@ -312,11 +312,43 @@ class MessageBox(Screen):
             self.app.pop_screen()
 
 
+class ConfirmDialog(Screen):
+    """Confirmation dialog screen."""
+
+    BINDINGS = [
+        Binding("escape", "app.pop_screen", "Cancelar"),
+    ]
+
+    def __init__(self, title: str, message: str, on_confirm: Callable[[], None], **kwargs):
+        super().__init__(**kwargs)
+        self.title_text = title
+        self.message_text = message
+        self.on_confirm = on_confirm
+
+    def compose(self) -> ComposeResult:
+        with Container():
+            yield Label(self.title_text)
+            yield Label(self.message_text)
+            with Horizontal():
+                yield Button("Sim", id="btn_yes", variant="primary")
+                yield Button("Não", id="btn_no", variant="error")
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "btn_yes":
+            self.on_confirm()
+            self.app.pop_screen()
+        elif event.button.id == "btn_no":
+            self.app.pop_screen()
+
+
 class EmpresaListScreen(Screen):
     """Screen for listing empresas."""
     
     BINDINGS = [
         Binding("escape", "app.pop_screen", "Voltar"),
+        Binding("n", "nova_empresa", "Novo"),
+        Binding("e", "editar_empresa", "Editar"),
+        Binding("d", "excluir_empresa", "Excluir"),
     ]
 
     def __init__(self, conn: sqlite3.Connection, **kwargs):
@@ -326,15 +358,82 @@ class EmpresaListScreen(Screen):
     def compose(self) -> ComposeResult:
         yield Header()
         yield DataTable(id="empresa_table")
+        with Horizontal():
+            yield Button("Novo", id="btn_novo", variant="primary")
+            ##yield Button("Editar", id="btn_editar")
+            yield Button("Excluir", id="btn_excluir", variant="error")
         yield Footer()
 
     def on_mount(self) -> None:
+        self.load_empresas()
+
+    def load_empresas(self) -> None:
         table = self.query_one(DataTable)
+        table.clear()
         table.add_columns("ID", "Nome", "CNPJ")
-        
+        table.cursor_type = "row"
+
         rows = fetch_all(self.conn, "SELECT id, nome, cnpj FROM empresa ORDER BY id")
         for row in rows:
             table.add_row(str(row["id"]), row["nome"], row["cnpj"])
+
+    def get_selected_empresa_id(self) -> Optional[int]:
+        table = self.query_one(DataTable)
+        table.cursor_type = "row"
+        if table.cursor_row is None:
+            return None
+        print(f"Cursor Row: {table.cursor_row}")    
+        selected_id = table.get_cell(table.cursor_row, 0)
+        try:
+            return int(selected_id)
+        except (TypeError, ValueError):
+            print("Deu erro ao tentar pegar o ID da empresa selecionada:", selected_id)
+            return None
+
+    def action_nova_empresa(self) -> None:
+        self.app.push_screen(EmpresaFormScreen(self.conn))
+
+    def action_editar_empresa(self) -> None:
+        empresa_id = self.get_selected_empresa_id()
+        print(empresa_id)
+        if empresa_id is None:
+            self.app.notify("Selecione uma empresa para editar.", severity="error")
+            return
+        empresa = fetch_one(self.conn, "SELECT * FROM empresa WHERE id = ?", (empresa_id,))
+        if empresa:
+            self.app.push_screen(EmpresaFormScreen(self.conn, existing=empresa))
+
+    def action_excluir_empresa(self) -> None:
+        empresa_id = self.get_selected_empresa_id()
+        if empresa_id is None:
+            self.app.notify("Selecione uma empresa para excluir.", severity="error")
+            return
+
+        def confirm_delete() -> None:
+            try:
+                self.conn.execute("DELETE FROM empresa WHERE id = ?", (empresa_id,))
+                self.conn.commit()
+                self.load_empresas()
+                self.app.notify("Empresa excluída com sucesso!")
+            except sqlite3.DatabaseError as exc:
+                self.conn.rollback()
+                self.app.notify(f"Erro ao excluir: {exc}", severity="error")
+
+        self.app.push_screen(
+            ConfirmDialog(
+                title="Confirmar exclusão",
+                message="Tem certeza que deseja excluir esse registro?",
+                on_confirm=confirm_delete,
+            )
+        )
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "btn_novo":
+            self.action_nova_empresa()
+        elif event.button.id == "btn_editar":
+            self.action_editar_empresa()
+        elif event.button.id == "btn_excluir":
+            self.action_excluir_empresa()
 
 
 class EmpresaFormScreen(Screen):
