@@ -218,6 +218,19 @@ Todos os erros de banco de dados são tratados com:
 5. Validação automática: débito = crédito
 ```
 
+## Problemas gerais
+
+- ecd não foi iniciada
+- verificar como funciona historico para funcionário e calculos trabalhistas
+- precisa fazer plano de contas para funcionários ou só holerite ??
+
+## Problemas - experiencia02.py - textual
+
+- Empresa não está editando, excluindo - problema ao recuperar dado pelo datatable
+- Lançamento não está funcionando e deve ser construída
+- Ao incluir e salvar não reflete na listagem de imediato - empresas
+
+
 ## 🔄 Roadmap Futuro
 
 - [ ] Relatório completo em PDF
@@ -227,6 +240,7 @@ Todos os erros de banco de dados são tratados com:
 - [ ] Dashboard com resumo financeiro
 - [ ] Autenticação de usuários
 - [ ] Sincronização com nuvem
+- [ ] Holerite
 
 ## 📝 Licença
 

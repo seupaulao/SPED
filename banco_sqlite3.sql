@@ -8,7 +8,8 @@ CREATE TABLE empresa (
   municipio TEXT,
   data_inicio TEXT,
   data_fim TEXT,
-  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  excluido_at TEXT
 );
 
 CREATE TABLE plano_contas (
@@ -27,6 +28,7 @@ CREATE TABLE plano_contas (
   codigo_referencial TEXT,
   aceita_lancamento INTEGER DEFAULT 1,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  excluido_at TEXT,
 
   FOREIGN KEY (empresa_id) REFERENCES empresa(id),
   FOREIGN KEY (conta_pai_id) REFERENCES plano_contas(id)
@@ -40,6 +42,7 @@ CREATE TABLE lancamento (
   historico TEXT,              -- numero e historico são um só campo 
   tipo TEXT DEFAULT 'N',       -- N - Normal, E - Estorno, A - Ajuste
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  excluido_at TEXT,
 
   FOREIGN KEY (empresa_id) REFERENCES empresa(id)
 );
@@ -50,6 +53,7 @@ CREATE TABLE lancamento_item (
   conta_id INTEGER,
   tipo TEXT NOT NULL, -- D ou C
   valor REAL NOT NULL,
+  excluido_at TEXT,
 
   FOREIGN KEY (lancamento_id) REFERENCES lancamento(id) ON DELETE CASCADE,
   FOREIGN KEY (conta_id) REFERENCES plano_contas(id)
@@ -60,6 +64,7 @@ CREATE TABLE mapa_demonstracoes (
   conta_id INTEGER,
   tipo TEXT, -- DRE, DVA, DFC
   categoria TEXT,
+  excluido_at TEXT,
 
   FOREIGN KEY (conta_id) REFERENCES plano_contas(id)
 );
