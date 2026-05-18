@@ -231,16 +231,31 @@ Todos os erros de banco de dados são tratados com:
 - Ao incluir e salvar não reflete na listagem de imediato - empresas
 
 
-## 🔄 Roadmap Futuro
+## Roadmap
 
-- [ ] Relatório completo em PDF
-- [ ] Exportação em Excel
-- [ ] Integração com ECD (Escrituração Contábil Digital)
-- [ ] Suporte a múltiplos períodos
-- [ ] Dashboard com resumo financeiro
-- [ ] Autenticação de usuários
-- [ ] Sincronização com nuvem
-- [ ] Holerite
+  - [ ] Cadastro da Administradora: Cliente - Escritorio de Contabilidade
+  - [ ] Configuracao da Empresa
+  - [ ] Usuario do Sistema
+  - [ ] Perfis de Acesso dos Usuarios - quem tem acesso a cada modulo
+  - [ ] Certificado Digital
+  - [ ] Definir e construir todos os modulos abaixo  
+      - Contabil
+        - Gerenciar como eh contruido os relatorios contabeis para entrega
+        - Numerar os Livros Diario, Caixa, Razao, Lalur
+        - SPED numero de ordem
+        - plano de conta referencial
+        - plano de conta por empresa
+        - integrar e importar dados de outros modulos
+        - encerramento de contas de resultado/apuracao resultado
+        - transferencia de lancamento entre contas
+        - fechamento/restauração
+      - Patrimonial
+      - Folha de Pagamento
+      - Fiscal
+      - Honorarios
+      - Protocolos    
+  
+
 
 ## 📝 Licença
 
