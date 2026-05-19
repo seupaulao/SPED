@@ -635,25 +635,25 @@ class MainScreen(Screen):
         yield Header()
         with Container():
             yield Label("PJLA Contabilidade OFFLINE", id="title")
-            with Vertical(classes="menu"):
-                yield Button("[A] Livro Diário", id="btn_livro_diario", variant="primary")
-                yield Button("[B] Relatórios", id="btn_relatorios")
-                yield Button("[C] Cadastro de Empresa", id="btn_empresa")
-                yield Button("[E] Plano de Contas", id="btn_plano_contas")
-                yield Button("[Q] Sair", id="btn_quit", variant="error")
+            # with Vertical(classes="menu"):
+            #     yield Button("[A] Livro Diário", id="btn_livro_diario", variant="primary")
+            #     yield Button("[B] Relatórios", id="btn_relatorios")
+            #     yield Button("[C] Cadastro de Empresa", id="btn_empresa")
+            #     yield Button("[E] Plano de Contas", id="btn_plano_contas")
+            #     yield Button("[Q] Sair", id="btn_quit", variant="error")
         yield Footer()
 
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        if event.button.id == "btn_livro_diario":
-            self.action_livro_diario()
-        elif event.button.id == "btn_relatorios":
-            self.action_relatorios()
-        elif event.button.id == "btn_empresa":
-            self.action_cadastro_empresa()
-        elif event.button.id == "btn_plano_contas":
-            self.action_plano_contas()
-        elif event.button.id == "btn_quit":
-            self.app.action_quit()
+    # def on_button_pressed(self, event: Button.Pressed) -> None:
+    #     if event.button.id == "btn_livro_diario":
+    #         self.action_livro_diario()
+    #     elif event.button.id == "btn_relatorios":
+    #         self.action_relatorios()
+    #     elif event.button.id == "btn_empresa":
+    #         self.action_cadastro_empresa()
+    #     elif event.button.id == "btn_plano_contas":
+    #         self.action_plano_contas()
+    #     elif event.button.id == "btn_quit":
+    #         self.app.action_quit()
 
     def action_livro_diario(self) -> None:
         self.app.notify("Livro Diário em desenvolvimento")

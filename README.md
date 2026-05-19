@@ -249,6 +249,8 @@ Todos os erros de banco de dados são tratados com:
         - encerramento de contas de resultado/apuracao resultado
         - transferencia de lancamento entre contas
         - fechamento/restauração
+        - controle do certificado digital
+        - controle de usuario
       - Patrimonial
       - Folha de Pagamento
       - Fiscal

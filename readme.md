@@ -131,6 +131,7 @@ python pjlacontabilidade.py
 ```
 ├── pjlacontabilidade.py          # Versão original (CLI)
 ├── experiencia02.py              # Versão moderna (Textual)
+├── app.py                        # teste datatable com banco de dados sqlite = database.py, empresas.db
 ├── banco_sqlite3.sql             # Schema do banco de dados
 ├── contabilidade.db              # Base de dados (gerada automaticamente)
 ├── funcoes_relatorios.py         # Funções de relatórios
