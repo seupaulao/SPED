@@ -1,334 +1,466 @@
-# Análise das Tabelas do Banco de Dados - PJLA Contabilidade
+# Análise das Tabelas do Banco de Dados - SPED / Contabilidade
 
-Documentação completa das tabelas do banco `contabilidade.db`, projetado para uma aplicação de escritório contábil com suporte a múltiplas empresas, partidas dobradas e geração automática de relatórios.
+Documento baseado no script `banco_sqlite3_novo.sql`. O arquivo descreve cada tabela criada, seu propósito e relacionamentos principais.
 
 ---
 
 ## Tabela: `empresa`
+Armazena os dados básicos das empresas/clientes atendidos pelo escritório contábil.
 
-Armazena os dados cadastrais das entidades (clientes) para as quais o escritório contábil presta serviços.
+Campos principais:
+- `id`: chave primária autoincrement.
+- `cnpj`, `nome`: identificação obrigatória da empresa.
+- `uf`, `municipio`: localização fiscal.
+- `data_inicio`, `data_fim`: período de vigência ou atividade.
+- `created_at`: registro de criação.
+- `excluido_at`: marca de exclusão lógica.
 
-### Campos
+Uso: central para isolar dados de cada cliente; referenciada por planos de contas, lançamentos, centros de custo e configuração.
 
-- **`id`** (INTEGER PRIMARY KEY AUTOINCREMENT)  
-  Identificador único da empresa. Chave primária gerada automaticamente.
+---
 
-- **`cnpj`** (TEXT NOT NULL)  
-  Número CNPJ da empresa. Campo obrigatório, identifica a empresa legalmente. Deve ser armazenado como texto para preservar zeros à esquerda e formatação.
+## Tabela: `report_types`
+Define tipos de demonstração ou relatórios financeiros suportados.
 
-- **`nome`** (TEXT NOT NULL)  
-  Razão social ou nome da empresa. Campo obrigatório para identificação visual.
+Campos:
+- `id`: identificador textual único.
+- `code`: código único curto (`BALANCO`, `DRE`, `DFC`, `DVA`, `BALANCETE`).
+- `name`: nome legível do relatório.
 
-- **`uf`** (TEXT)  
-  Unidade da Federação (estado) onde a empresa está localizada (ex: `SP`, `RJ`, `MG`). Opcional, usado para endereço fiscal.
+Uso: serve para tipar templates, versões de relatórios e permitir flexibilidade de relatórios.
 
-- **`municipio`** (TEXT)  
-  Município onde a empresa está localizada. Opcional, complementa a localização fiscal.
+---
 
-- **`data_inicio`** (TEXT)  
-  Data de início das atividades ou da vigência do contrato com o escritório (formato: `YYYY-MM-DD`). Opcional, define o período contábil inicial.
+## Tabela: `plano_contas_referencial`
+Armazena uma tabela de contas referencial, que pode ser usada como modelo ou catálogo de contas padrão.
 
-- **`data_fim`** (TEXT)  
-  Data de encerramento das atividades ou término do contrato (formato: `YYYY-MM-DD`). Opcional, permite marcar empresas inativas.
+Campos:
+- `id`: chave primária textual.
+- `parent_id`: relação hierárquica autoreferenciada.
+- `codigo`, `nome`: dados da conta referencial.
+- `tipo_conta`, `level`, `aceita_entrada`, `is_ativo`: atributos do referencial.
+- `tipo`, `natureza`, `nivel`, `grupo`, `dre_grupo`, `fluxo_caixa_tipo`: classificação contábil.
+- `created_at`, `excluded_at`: auditoria e exclusão lógica.
 
-- **`created_at`** (TEXT DEFAULT CURRENT_TIMESTAMP)  
-  Data/hora de criação do registro no banco, para auditoria.
-
-### Relacionamentos
-
-- **1:N com `plano_contas`**: cada empresa tem seu próprio plano de contas
-- **1:N com `lancamento`**: cada empresa tem múltiplos lançamentos contábeis
-- **1:N com `historico_padrao`**: cada empresa pode ter descrições padrão de lançamentos
-
-### Importância
-
-Tabela fundamental que permite o isolamento de dados entre clientes. Cada operação subsequente (plano de contas, lançamentos, relatórios) é filtrada por `empresa_id` para evitar mistura de dados.
+Uso: refere-se a base de contas que pode ser reutilizada na criação de planos de contas de empresas.
 
 ---
 
 ## Tabela: `plano_contas`
+Registra o plano de contas da empresa, com estrutura hierárquica e atributos contábeis.
 
-Armazena a hierarquia de contas contábeis de cada empresa. É o núcleo do sistema, pois todo lançamento referencia contas dessa tabela.
+Campos:
+- `id`: chave primária autoincrement.
+- `empresa_id`: vincula a conta à empresa.
+- `plano_contas_referencial_id`: link opcional ao catálogo referencial.
+- `codigo`, `descricao`: identificação da conta.
+- `tipo`: tipo de conta (sintética ou analítica).
+- `natureza`, `nivel`, `conta_pai_id`: hierarquia e natureza contábil.
+- `codigo_referencial`, `aceita_lancamento`: integração externa e controle de lançamentos.
+- `grupo`, `subgrupo`, `dre_grupo`, `fluxo_caixa_tipo`: classificações para relatórios.
+- `created_at`, `excluido_at`: auditoria e exclusão lógica.
 
-### Campos
-
-#### Identificação
-
-- **`id`** (INTEGER PRIMARY KEY AUTOINCREMENT)  
-  Identificador único da conta. Gerado automaticamente para cada novo registro.
-
-- **`empresa_id`** (INTEGER, FOREIGN KEY)  
-  Referência à empresa proprietária da conta. Permite que múltiplas empresas tenham seus próprios planos de contas isolados.
-
-- **`codigo`** (TEXT NOT NULL)  
-  Código/número da conta na hierarquia contábil (ex: `1.1.1.01`, `2.2.1`). Segue a estrutura do plano de contas brasileiro. É único por empresa.
-
-- **`descricao`** (TEXT NOT NULL)  
-  Nome/descrição legível da conta (ex: `Caixa`, `Fornecedores`, `Receita de Vendas`).
-
-#### Classificação Contábil
-
-- **`tipo`** (TEXT NOT NULL, valores: `S` ou `A`)  
-  Define o nível da conta na hierarquia:
-  - `S` = **Sintética**: contas agregadoras que agrupam outras contas. Nunca recebem lançamentos diretos.
-  - `A` = **Analítica**: contas que recebem lançamentos efetivos.
-
-- **`natureza`** (TEXT, valores: `D` ou `C`)  
-  Define o saldo natural da conta:
-  - `D` = **Devedora**: aumenta com débito, diminui com crédito (Ativo, Despesa)
-  - `C` = **Credora**: aumenta com crédito, diminui com débito (Passivo, Receita)
-
-#### Posicionamento Hierárquico
-
-- **`nivel`** (INTEGER NOT NULL)  
-  Profundidade da conta na árvore (ex: 1 = contas raiz, 2 = subgrupos, 3 = contas analíticas). Usado para indentação visual.
-
-- **`conta_pai_id`** (INTEGER, FOREIGN KEY autoreferencial)  
-  Aponta para a conta que é o "pai" (supergrupo) na hierarquia. Permite estrutura em árvore.
-
-#### Classificação de Relatórios
-
-- **`grupo`** (TEXT)  
-  Classificação no Balanço Patrimonial:
-  - `ATIVO`: bens e direitos
-  - `PASSIVO`: obrigações
-  - `PL`: patrimônio líquido
-
-- **`dre_grupo`** (TEXT)  
-  Classificação na Demonstração do Resultado (DRE):
-  - `RECEITA_BRUTA`: receitas operacionais
-  - `CUSTO`: custo dos produtos vendidos
-  - `DESPESA_OPERACIONAL`: despesas gerais
-  - `RESULTADO_FINANCEIRO`: juros e variações financeiras
-
-- **`subgrupo`** (TEXT)  
-  Classificação na Demonstração do Valor Adicionado (DVA):
-  - `RECEITAS`, `INSUMOS`, `PESSOAL`, `IMPOSTOS`, `CAPITAL_TERCEIROS`
-
-- **`fluxo_caixa_tipo`** (TEXT)  
-  Classificação no Fluxo de Caixa (DFC):
-  - `OPERACIONAL`: atividades operacionais
-  - `INVESTIMENTO`: compra/venda de ativos
-  - `FINANCIAMENTO`: empréstimos e dividendos
-
-#### Configuração
-
-- **`codigo_referencial`** (TEXT)  
-  Código externo para integração (ex: código SPED, referência legal).
-
-- **`aceita_lancamento`** (INTEGER DEFAULT 1)  
-  Flag de bloqueio:
-  - `1` = aceita lançamentos (conta analítica)
-  - `0` = bloqueada (conta sintética ou inativa)
-
-- **`created_at`** (TEXT DEFAULT CURRENT_TIMESTAMP)  
-  Data/hora de criação para auditoria.
-
-### Relacionamentos
-
-- **N:1 com `empresa`**: cada conta pertence a uma empresa
-- **1:N (auto-relacionamento) via `conta_pai_id`**: hierarquia de contas
-- **1:N com `lancamento_item`**: cada conta pode ter múltiplos itens de lançamento
-- **1:N com `mapa_demonstracoes`**: cada conta pode estar mapeada em múltiplos relatórios
-
-### Importância
-
-Implementa um plano de contas hierárquico que permite estruturar contas por grupos, gerar relatórios automaticamente e bloquear lançamentos em contas sintéticas.
+Uso: é o núcleo do sistema contábil, referenciado por itens de lançamento, mapas de demonstrativos e SPED.
 
 ---
 
-## Tabela: `historico_padrao`
+## Tabela: `centro_custo`
+Registra centros de custo vinculados a uma empresa.
 
-Armazena descrições/históricos reutilizáveis para lançamentos, reduzindo digitação repetitiva.
+Campos:
+- `id`: chave primária textual.
+- `empresa_id`: referência à empresa.
+- `codigo`, `nome`: identificação do centro de custo.
+- `created_at`: auditoria.
 
-### Campos
-
-- **`id`** (INTEGER PRIMARY KEY AUTOINCREMENT)  
-  Identificador único do histórico padrão.
-
-- **`empresa_id`** (INTEGER, FOREIGN KEY)  
-  Referência à empresa. Cada empresa pode ter seus próprios históricos.
-
-- **`codigo`** (TEXT)  
-  Código de referência para o histórico (ex: `VND001` para "Venda a Cliente", `CHQ002` para "Cheque emitido").
-
-- **`descricao`** (TEXT NOT NULL)  
-  Texto do histórico a reutilizar (ex: `Venda de produtos - NF 001`, `Depósito bancário - Cheque 12345`).
-
-### Relacionamentos
-
-- **N:1 com `empresa`**: cada histórico pertence a uma empresa
-- **1:N com `lancamento`**: um histórico padrão pode ser referenciado por múltiplos lançamentos
-
-### Importância
-
-Melhora a usabilidade da aplicação ao permitir que o operador selecione um histórico pré-configurado em vez de digitar manualmente. Essencial em operações repetitivas (folha de pagamento, depósitos, transferências).
+Uso: permite classificar lançamentos por centro de custo em cada empresa.
 
 ---
 
 ## Tabela: `lancamento`
+Cabeçalho dos lançamentos contábeis.
 
-Armazena o **cabeçalho** de cada lançamento contábil. Um lançamento é composto por um cabeçalho + múltiplos itens de débito/crédito (partidas dobradas).
+Campos:
+- `id`: chave primária autoincrement.
+- `empresa_id`: empresa do lançamento.
+- `data`: data do lançamento.
+- `historico`: descrição livre.
+- `tipo`: tipo de lançamento, padrão `N`.
+- `created_at`, `excluido_at`: auditoria e exclusão lógica.
 
-### Campos
-
-- **`id`** (INTEGER PRIMARY KEY AUTOINCREMENT)  
-  Identificador único do lançamento.
-
-- **`empresa_id`** (INTEGER, FOREIGN KEY)  
-  Referência à empresa. Isola lançamentos por cliente.
-
-- **`data`** (TEXT NOT NULL)  
-  Data do lançamento contábil (formato: `YYYY-MM-DD`). Define o período fiscal ao qual pertence.
-
-- **`numero`** (TEXT)  
-  Número de referência do documento (ex: número da nota fiscal, cheque, recibo). Opcional, usado para rastreabilidade.
-
-- **`historico`** (TEXT)  
-  Descrição do lançamento digitada pelo operador (ex: `Venda de produto para cliente XYZ`). Campo livre.
-
-- **`historico_padrao_id`** (INTEGER, FOREIGN KEY)  
-  Referência a um histórico pré-configurado. Permite vincular um modelo de descrição ao lançamento.
-
-- **`tipo`** (TEXT DEFAULT 'N')  
-  Tipo de lançamento:
-  - `N` = Normal (lançamento padrão)
-  - Pode ser expandido para outros tipos (ex: `E` = Estorno, `A` = Ajuste)
-
-- **`created_at`** (TEXT DEFAULT CURRENT_TIMESTAMP)  
-  Data/hora de criação para auditoria.
-
-### Relacionamentos
-
-- **N:1 com `empresa`**: cada lançamento pertence a uma empresa
-- **N:1 com `historico_padrao`**: pode referenciar um histórico pré-configurado
-- **1:N com `lancamento_item`**: um lançamento tem múltiplos itens de débito/crédito
-
-### Importância
-
-Lançamento é a unidade central de entrada de dados. A regra fundamental de contabilidade (débito = crédito) é validada pelos itens associados.
+Uso: agrupa itens de débito e crédito, representando cada transação contábil.
 
 ---
 
 ## Tabela: `lancamento_item`
+Itens de cada lançamento, implementando partidas dobradas.
 
-Armazena os **itens** (linhas) de cada lançamento, implementando a regra de **partidas dobradas**: cada transação tem débitos e créditos que se equilibram.
+Campos:
+- `id`: chave primária.
+- `lancamento_id`: referência ao cabeçalho de lançamento, com `ON DELETE CASCADE`.
+- `conta_id`: conta afetada.
+- `centro_custo_id`: centro de custo opcional.
+- `tipo`: `D` ou `C` (débito ou crédito).
+- `valor`: valor do item.
 
-### Campos
+Uso: registra linhas de débito/crédito e permite validação de equilíbrio entre lançamentos.
 
-- **`id`** (INTEGER PRIMARY KEY AUTOINCREMENT)  
-  Identificador único do item.
+---
 
-- **`lancamento_id`** (INTEGER, FOREIGN KEY com ON DELETE CASCADE)  
-  Referência ao lançamento pai. Se o lançamento for deletado, todos os itens são removidos automaticamente.
+## Tabela: `report_templates`
+Define templates de relatórios configuráveis.
 
-- **`conta_id`** (INTEGER, FOREIGN KEY)  
-  Referência à conta contábil que receberá o débito ou crédito.
+Campos:
+- `id`: chave primária textual.
+- `empresa_id`: empresa associada (observação: o FK aponta para `empresas(id)` mas a tabela definida no script é `empresa`).
+- `report_type_id`: tipo de relatório.
+- `name`: nome do template.
+- `is_default`: flag de template padrão.
+- `created_at`: auditoria.
 
-- **`tipo`** (TEXT NOT NULL, valores: `D` ou `C`)  
-  Define se é débito ou crédito:
-  - `D` = Débito (afeta a conta conforme sua natureza)
-  - `C` = Crédito (afeta a conta conforme sua natureza)
+Uso: modela relatórios reutilizáveis por empresa e tipo.
 
-- **`valor`** (REAL NOT NULL)  
-  Valor do débito ou crédito, sempre positivo. A soma dos débitos deve igualar a soma dos créditos.
+---
 
-- **`historico`** (TEXT)  
-  Histórico específico para este item (opcional, pode diferir do histórico geral do lançamento).
+## Tabela: `report_template_lines`
+Linhas de um template de relatório.
 
-### Relacionamentos
+Campos:
+- `id`: chave primária textual.
+- `template_id`: referência ao template.
+- `parent_id`: permite hierarquia de linhas.
+- `line_order`: ordem da linha.
+- `code`, `title`, `line_type`: identificação da linha.
+- `formula`: fórmula opcional para cálculo.
+- `is_bold`: estilo de apresentação.
+- `created_at`: auditoria.
 
-- **N:1 com `lancamento`**: múltiplos itens pertencem a um lançamento
-- **N:1 com `plano_contas`**: cada item afeta uma conta específica
+Uso: estrutura as linhas do relatório, permitindo seções, subtítulos e cálculos.
 
-### Importante: Regra de Partidas Dobradas
+---
 
-Para que um lançamento seja válido:
-$$\sum \text{débitos} = \sum \text{créditos}$$
+## Tabela: `report_line_accounts`
+Associa contas a linhas de relatório.
 
-Exemplo de lançamento válido:
-| Tipo | Conta | Valor |
-|------|-------|-------|
-| D | Caixa | 1.000 |
-| C | Receita | 1.000 |
+Campos:
+- `id`: chave primária textual.
+- `report_line_id`: linha de template.
+- `conta_id`: conta do plano de contas.
 
-### Importância
-
-Implementa o princípio contábil fundamental. A aplicação bloqueia lançamentos desbalanceados. Índice em `lancamento_id` e `conta_id` melhora performance de relatórios.
+Uso: define quais contas entram em cada linha de relatório.
 
 ---
 
 ## Tabela: `mapa_demonstracoes`
+Mapeia contas a categorias de demonstrações financeiras.
 
-Mapeia contas para demonstrações financeiras específicas, permitindo gerar relatórios como DRE, DVA e DFC mesmo que a conta não tenha campos específicos preenchidos.
+Campos:
+- `id`: chave primária autoincrement.
+- `conta_id`: conta mapeada.
+- `tipo`: tipo de demonstração.
+- `categoria`: categoria dentro do relatório.
+- `excluido_at`: exclusão lógica.
 
-### Campos
-
-- **`id`** (INTEGER PRIMARY KEY AUTOINCREMENT)  
-  Identificador único do mapeamento.
-
-- **`conta_id`** (INTEGER, FOREIGN KEY)  
-  Referência à conta contábil a ser mapeada.
-
-- **`tipo`** (TEXT)  
-  Tipo de demonstração para a qual a conta será mapeada:
-  - `DRE` = Demonstração do Resultado (relatório de lucro/prejuízo)
-  - `DVA` = Demonstração do Valor Adicionado
-  - `DFC` = Demonstração de Fluxo de Caixa
-
-- **`categoria`** (TEXT)  
-  Categoria específica dentro do relatório (ex: para DRE, pode ser `RECEITA_BRUTA`, `DESPESA`; para DVA, pode ser `PESSOAL`, `IMPOSTOS`).
-
-### Relacionamentos
-
-- **N:1 com `plano_contas`**: múltiplos mapeamentos para uma conta
-
-### Importância
-
-Fornece flexibilidade adicional para configurar relatórios. Se um campo como `dre_grupo` não for preenchido na conta, o mapeamento serve como alternativa de classificação. Essencial para adaptar o sistema a diferentes estruturas de relatório.
+Uso: fornece classificação alternativa para relatórios mesmo quando o plano de contas não tem todos os campos preenchidos.
 
 ---
 
-## Resumo da Arquitetura
+## Tabela: `tags`
+Armazena tags para classificação adicional.
 
-### Fluxo de Dados
+Campos:
+- `id`: chave primária textual.
+- `empresa_id`: referência à empresa (`empresas(id)` no script).
+- `name`: nome da tag.
 
-```
-Empresa
-  ├─ Plano de Contas (hierarquizado)
-  │   └─ Mapa de Demonstrações (para relatórios)
-  │
-  ├─ Históricos Padrão (descrições reutilizáveis)
-  │
-  └─ Lançamentos (entrada de dados)
-      └─ Itens de Lançamento (partidas dobradas)
-```
-
-### Isolamento Multi-Empresa
-
-Todas as tabelas críticas (`plano_contas`, `lancamento`, `historico_padrao`) referem-se a `empresa_id`, garantindo que dados de diferentes clientes nunca se misturem.
-
-### Validações Implícitas no Schema
-
-- **Chaves estrangeiras**: evitam referências órfãs
-- **NOT NULL**: campos obrigatórios
-- **ON DELETE CASCADE**: ao deletar lançamento, itens são removidos automaticamente
-- **Autorrelacionamento** em `plano_contas`: permite árvore hierárquica
-
-### Índices para Performance
-
-- `idx_lancamento_data`: consultas rápidas por período
-- `idx_lancamento_item_conta`: agregações por conta e saldo
+Uso: rotular lançamentos ou linhas com etiquetas livres.
 
 ---
 
-## Casos de Uso Principais
+## Tabela: `lancamento_item_tags`
+Tabela de relacionamento many-to-many entre linhas e tags.
 
-1. **Cadastrar Empresa**: inserir em `empresa`
-2. **Montar Plano de Contas**: inserir hierarquia em `plano_contas`
-3. **Registrar Lançamento**: 
-   - inserir cabeçalho em `lancamento`
-   - inserir múltiplos itens em `lancamento_item` (validando débito = crédito)
-4. **Gerar Balancete**: agregar itens por conta, respeitar natureza
-5. **Gerar BP/DRE/DVA**: agregar itens por grupo/dre_grupo/subgrupo, usando `mapa_demonstracoes` como fallback
-6. **Auditoria**: verificar `created_at` em todas as tabelas
+Campos:
+- `lancamento_item_id`: referência a uma linha de lançamento (`lancamento_item(id)`),
+- `tag_id`: referência a `tags(id)`.
+- chave primária composta em `(lancamento_item_id, tag_id)`.
+
+Uso: permite atribuir várias tags a cada linha.
+
+---
+
+## Tabela: `sped_mappings`
+Mapeia contas do plano de contas para códigos SPED.
+
+Campos:
+- `id`: chave primária textual.
+- `conta_id`: conta associada.
+- `sped_code`: código SPED.
+- `description`: descrição do mapeamento.
+
+Uso: vincula contas internas aos códigos do SPED para exportação fiscal.
+
+---
+
+## Tabela: `usuarios`
+Cadastro de usuários do sistema.
+
+Campos:
+- `id`: chave primária textual.
+- `nome`, `email`, `password_hash`: informações de login.
+- `is_active`: usuário ativo/inativo.
+- `last_login_at`, `created_at`: auditoria.
+
+Uso: controle de acesso e autenticação.
+
+---
+
+## Tabela: `regras`
+Define papéis de usuário.
+
+Campos:
+- `id`: chave primária textual.
+- `code`: código único do papel.
+- `name`: nome legível.
+
+Uso: classifica usuários em perfis como `SUPER_ADMIN`, `ACCOUNTANT`, `ASSISTANT`, `AUDITOR`, `CLIENT`.
+
+---
+
+## Tabela: `permissoes`
+Define permissões do sistema.
+
+Campos:
+- `id`: chave primária textual.
+- `code`: código único da permissão.
+- `descricao`: descrição legível.
+
+Uso: lista de ações autorizáveis.
+
+---
+
+## Tabela: `regra_permissao`
+Relaciona papéis a permissões.
+
+Campos:
+- `role_id`: referência a `regras(id)`.
+- `permission_id`: referência a `permissoes(id)`.
+- chave primária composta.
+
+Uso: define quais permissões cada papel possui.
+
+---
+
+## Tabela: `empresa_usuario`
+Associa usuários a empresas com um papel.
+
+Campos:
+- `user_id`: referência a `usuarios(id)`.
+- `company_id`: referência a `empresa(id)`.
+- `role_id`: papel do usuário.
+- chave primária composta.
+
+Uso: modela multiempresa e papéis por empresa.
+
+---
+
+## Tabela: `usuario_sessoes`
+Rastrea sessões de usuário.
+
+Campos:
+- `id`: chave primária textual.
+- `user_id`: usuário da sessão.
+- `token`: token único de sessão.
+- `ip_address`, `user_agent`: contexto da sessão.
+- `expires_at`: expiração da sessão.
+- `revoked`: flag de revogação.
+- `created_at`: auditoria.
+
+Uso: gerenciar autenticação e sessões ativas.
+
+---
+
+## Tabela: `audit_logs`
+Registra auditoria de ações no sistema.
+
+Campos:
+- `id`: chave primária textual.
+- `company_id`: empresa afetada.
+- `user_id`: usuário que executou a ação.
+- `entity_name`, `entity_id`: entidade alterada.
+- `action`: tipo de ação.
+- `old_data`, `new_data`: estado antes e depois.
+- `created_at`: momento da ação.
+
+Uso: histórico de alterações para auditoria e rastreabilidade.
+
+---
+
+## Tabela: `sped_natureza`
+Define a natureza fiscal de contas SPED.
+
+Campos:
+- `id`: chave primária textual.
+- `code`: código único (`01` a `06`).
+- `description`: descrição da natureza.
+
+Uso: classificar contas por natureza no SPED.
+
+---
+
+## Tabela: `report_versions`
+Registra versões geradas de relatórios.
+
+Campos:
+- `id`: chave primária textual.
+- `empresa_id`: empresa geradora.
+- `report_template_id`: template usado.
+- `report_type_id`: tipo de relatório.
+- `version_number`: número da versão.
+- `fiscal_year`, `start_period`, `end_period`: período fiscal.
+- `generated_by`: usuário gerador (`users(id)` no script, mas a tabela é `usuarios`).
+- `is_locked`: bloqueio da versão.
+- `notes`: observações.
+- `created_at`: auditoria.
+
+Uso: histórico de relatórios gerados e versões fechadas.
+
+---
+
+## Tabela: `report_version_lines`
+Armazena linhas de uma versão de relatório.
+
+Campos:
+- `id`: chave primária textual.
+- `report_version_id`: referência à versão.
+- `line_order`, `code`, `title`: definição da linha.
+- `amount`: valor calculado.
+- `created_at`: auditoria.
+
+Uso: guarda o resultado final de cada linha de relatório gerado.
+
+---
+
+## Tabela: `trava_contabil`
+Representa o fechamento contábil de períodos.
+
+Campos:
+- `id`: chave primária textual.
+- `empresa_id`: empresa afetada.
+- `year`, `month`: período fechado.
+- `is_closed`: flag de fechamento.
+- `closed_by`: usuário que fechou.
+- `closed_at`: data do fechamento.
+
+Uso: controle de travamento de períodos contábeis.
+
+---
+
+## Tabela: `certificados_digitais`
+Armazena certificados digitais usados por empresa.
+
+Campos:
+- `id`: chave primária textual.
+- `empresa_id`: empresa dona do certificado.
+- `certificate_name`, `serial_number`, `issuer`: dados do certificado.
+- `valid_from`, `valid_until`: validade.
+- `encrypted_pfx`: certificado criptografado.
+- `created_at`: auditoria.
+
+Uso: suporte a assinaturas digitais e certificação fiscal.
+
+---
+
+## Tabela: `ecd_arquivos`
+Armazena arquivos ECD gerados.
+
+Campos:
+- `id`: chave primária textual.
+- `empresa_id`: empresa associada.
+- `fiscal_year`: ano fiscal.
+- `file_name`, `file_hash`: metadados do arquivo.
+- `generated_by`: usuário gerador.
+- `generated_at`, `signed_at`, `delivered_at`: datas do ciclo.
+- `status`: status do arquivo.
+
+Uso: controla geração e entrega de arquivos ECD.
+
+---
+
+## Tabela: `assinaturas_digitais`
+Guarda assinaturas eletrônicas de arquivos ECD.
+
+Campos:
+- `id`: chave primária textual.
+- `ecd_file_id`: referência a `ecd_files(id)` no script, mas a tabela real é `ecd_arquivos`.
+- `signed_by`: usuário assinante.
+- `certificate_id`: referência a `digital_certificates(id)` no script, mas a tabela real é `certificados_digitais`.
+- `signature_hash`: hash da assinatura.
+- `signed_at`: data da assinatura.
+
+Uso: registro de assinatura digital de arquivos.
+
+---
+
+## Tabela: `sped_entregas`
+Registra entregas de SPED.
+
+Campos:
+- `id`: chave primária textual.
+- `empresa_id`: empresa da entrega.
+- `sped_type`: tipo de SPED.
+- `fiscal_year`: ano fiscal.
+- `protocol`, `receipt_number`: comprovantes de entrega.
+- `delivered_at`: data de entrega.
+- `status`: situação da entrega.
+
+Uso: acompanhamento de envios de SPED.
+
+---
+
+## Tabela: `jobs`
+Fila de jobs assíncronos.
+
+Campos:
+- `id`: chave primária textual.
+- `queue_name`: nome da fila.
+- `payload`: dados do job.
+- `status`: estado do job.
+- `retries`: número de tentativas.
+- `created_at`: data de criação.
+- `processed_at`: data de processamento.
+
+Uso: tarefas em background, como geração de relatórios ou exportações.
+
+---
+
+## Visões
+
+### `user_permissions_view`
+View que junta `empresa_usuario`, `regra_permissao` e `permissoes` para expor as permissões de cada usuário por empresa.
+
+### `trial_balance_view`
+View que tenta agregar débitos e créditos por conta, mas referencia colunas `a.code` e `a.name` que não existem em `plano_contas` no script atual.
+
+---
+
+## Tabela: `empresa_configuracao`
+Configuração específica por empresa.
+
+Campos:
+- `empresa_id`: chave primária e referência a `companies(id)` no script, novamente inconsistente com a tabela `empresa`.
+- `permitir_dinheiro_negativo`: flag de limite de caixa.
+- `periodo_fechamento_automatico`: fechamento automático.
+- `default_report_template`: template de relatório padrão.
+- `created_at`: auditoria.
+
+Uso: mantém preferências e configurações por empresa.
+
+---
+
+## Observações gerais
+
+- O script é uma conversão de PostgreSQL para SQLite e contém várias referências de FK que não foram ajustadas para os nomes de tabelas presentes (`empresas` vs `empresa`, `companies` vs `empresa`, `users` vs `usuarios`, `ecd_files` vs `ecd_arquivos`, `digital_certificates` vs `certificados_digitais`, `journal_entry_lines` ausente).
+- Algumas views também fazem referência a colunas ou tabelas inexistentes no esquema atual.
+- A estrutura central de contabilidade está presente: empresas, plano de contas, lançamentos, itens, mapas de demonstrativos e relatórios.
+- A parte de usuário/permissão e auditoria também está modelada, embora precise de correções de nome de tabela para funcionar sem erros.
