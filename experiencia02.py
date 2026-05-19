@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import sqlite3
 from datetime import datetime
-from pathlib import Path
-from typing import Any, Callable, Iterable, Optional
+
+from typing import Any, Callable, Optional
 
 from textual.app import ComposeResult, SystemCommand
 from textual.containers import Container, Horizontal, Vertical, ScrollableContainer
@@ -16,162 +16,7 @@ import funcoes_relatorios as relatorios
 
 
 APP_TITLE = "PJLA Contabilidade OFFLINE"
-DB_PATH = Path(__file__).with_name("contabilidade.db")
-SCHEMA_PATH = Path(__file__).with_name("banco_sqlite3.sql")
-
-EMPRESA_FIELDS = [
-    ("cnpj", "CNPJ", True, "text"),
-    ("nome", "NOME", True, "text"),
-    ("uf", "UF", False, "text"),
-    ("municipio", "MUNICIPIO", False, "text"),
-    ("data_inicio", "DATA DE INICIO", False, "date"),
-    ("data_fim", "DATA DE FIM", False, "date"),
-]
-
-
-# ============= DATABASE FUNCTIONS =============
-
-def normalize_date(value: str) -> str:
-    text = value.strip()
-    if not text:
-        return ""
-    for fmt in ("%d/%m/%Y", "%Y-%m-%d"):
-        try:
-            return datetime.strptime(text, fmt).strftime("%Y-%m-%d")
-        except ValueError:
-            continue
-    raise ValueError("Use o formato DD/MM/AAAA.")
-
-
-def display_date(value: Optional[str]) -> str:
-    if not value:
-        return ""
-    for fmt in ("%Y-%m-%d", "%d/%m/%Y"):
-        try:
-            return datetime.strptime(value, fmt).strftime("%d/%m/%Y")
-        except ValueError:
-            continue
-    return value
-
-
-def parse_decimal(value: str) -> float:
-    text = value.strip()
-    if "," in text and "." in text:
-        if text.rfind(",") > text.rfind("."):
-            text = text.replace(".", "").replace(",", ".")
-        else:
-            text = text.replace(",", "")
-    elif "," in text:
-        text = text.replace(".", "").replace(",", ".")
-    if not text:
-        raise ValueError("Informe um valor numérico.")
-    amount = float(text)
-    if amount <= 0:
-        raise ValueError("Informe um valor maior que zero.")
-    return amount
-
-
-def format_currency(value: Any) -> str:
-    amount = float(value or 0.0)
-    text = f"{amount:,.2f}"
-    return text.replace(",", "X").replace(".", ",").replace("X", ".")
-
-
-def connect_db() -> sqlite3.Connection:
-    db_exists = DB_PATH.exists()
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA foreign_keys = ON")
-    ensure_runtime_schema(conn, db_exists=db_exists)
-    return conn
-
-
-def ensure_runtime_schema(conn: sqlite3.Connection, db_exists: bool) -> None:
-    if not db_exists and SCHEMA_PATH.exists():
-        conn.executescript(SCHEMA_PATH.read_text(encoding="utf-8"))
-        conn.commit()
-
-    columns = {row[1] for row in conn.execute("PRAGMA table_info(plano_contas)").fetchall()}
-    extra_columns = {
-        "grupo": "TEXT",
-        "dre_grupo": "TEXT",
-        "subgrupo": "TEXT",
-        "fluxo_caixa_tipo": "TEXT",
-    }
-    for column_name, column_type in extra_columns.items():
-        if column_name not in columns:
-            conn.execute(f"ALTER TABLE plano_contas ADD COLUMN {column_name} {column_type}")
-
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_lancamento_data ON lancamento(data)")
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_lancamento_item_conta ON lancamento_item(conta_id)")
-    conn.commit()
-
-
-def fetch_one(conn: sqlite3.Connection, sql: str, params: Iterable[Any] = ()) -> Optional[sqlite3.Row]:
-    return conn.execute(sql, tuple(params)).fetchone()
-
-
-def fetch_all(conn: sqlite3.Connection, sql: str, params: Iterable[Any] = ()) -> list[sqlite3.Row]:
-    return conn.execute(sql, tuple(params)).fetchall()
-
-
-def find_account(conn: sqlite3.Connection, empresa_id: int, raw_name: str) -> tuple[Optional[sqlite3.Row], str]:
-    normalized = raw_name.strip()
-    entry_type = "D"
-    if normalized.lower().startswith("a "):
-        entry_type = "C"
-        normalized = normalized[2:].strip()
-
-    account = fetch_one(
-        conn,
-        """
-        SELECT *
-        FROM plano_contas
-        WHERE empresa_id = ?
-          AND (UPPER(descricao) = UPPER(?) OR codigo = ? OR UPPER(descricao) LIKE UPPER(?))
-        ORDER BY CASE
-            WHEN UPPER(descricao) = UPPER(?) THEN 0
-            WHEN codigo = ? THEN 1
-            ELSE 2
-        END,
-        codigo
-        LIMIT 1
-        """,
-        (empresa_id, normalized, normalized, f"%{normalized}%", normalized, normalized),
-    )
-    return account, entry_type
-
-
-def fetch_lancamento(conn: sqlite3.Connection, empresa_id: int, lancamento_id: Any) -> Optional[sqlite3.Row]:
-    return fetch_one(
-        conn,
-        """
-        SELECT id, empresa_id, data, numero, historico
-        FROM lancamento
-        WHERE empresa_id = ? AND id = ?
-        """,
-        (empresa_id, lancamento_id),
-    )
-
-
-def fetch_lancamento_items(conn: sqlite3.Connection, lancamento_id: int) -> list[sqlite3.Row]:
-    return fetch_all(
-        conn,
-        """
-        SELECT li.id, li.conta_id, li.tipo, li.valor, li.historico, c.codigo, c.descricao
-        FROM lancamento_item li
-        JOIN plano_contas c ON c.id = li.conta_id
-        WHERE li.lancamento_id = ?
-        ORDER BY li.id
-        """,
-        (lancamento_id,),
-    )
-
-
-def summarize_items(items: list[dict[str, Any]]) -> tuple[float, float]:
-    total_debitos = sum(item["valor"] for item in items if item["tipo"] == "D")
-    total_creditos = sum(item["valor"] for item in items if item["tipo"] == "C")
-    return total_debitos, total_creditos
+EMPRESA_ATUAL: Optional[sqlite3.Row] = None
 
 
 # ============= TEXTUAL UI COMPONENTS =============
@@ -199,6 +44,56 @@ class FormField(Container):
     def get_value(self) -> str:
         return self.input_widget.value if self.input_widget else ""
 
+class MessageBox(Screen):
+    """Simple message display screen."""
+    
+    def __init__(self, title: str, message: str, **kwargs):
+        super().__init__(**kwargs)
+        self.title_text = title
+        self.message_text = message
+
+    def compose(self) -> ComposeResult:
+        with Container():
+            yield Label(self.title_text)
+            yield Label(self.message_text)
+            with Horizontal():
+                yield Button("OK", id="btn_ok")
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "btn_ok":
+            self.app.pop_screen()
+
+
+class ConfirmDialog(Screen):
+    """Confirmation dialog screen."""
+
+    BINDINGS = [
+        Binding("escape", "app.pop_screen", "Cancelar"),
+    ]
+
+    def __init__(self, title: str, message: str, on_confirm: Callable[[], None], **kwargs):
+        super().__init__(**kwargs)
+        self.title_text = title
+        self.message_text = message
+        self.on_confirm = on_confirm
+
+    def compose(self) -> ComposeResult:
+        with Container():
+            yield Label(self.title_text)
+            yield Label(self.message_text)
+            with Horizontal():
+                yield Button("Sim", id="btn_yes", variant="primary")
+                yield Button("Não", id="btn_no", variant="error")
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "btn_yes":
+            self.on_confirm()
+            self.app.pop_screen()
+        elif event.button.id == "btn_no":
+            self.app.pop_screen()
+
+
+# ============= FORMS =============
 
 class EmpresaForm(Static):
     """Form for empresa data entry."""
@@ -211,12 +106,12 @@ class EmpresaForm(Static):
     def compose(self) -> ComposeResult:
         yield Label("Informações da Empresa")
         with ScrollableContainer():
-            for field_name, label, required, field_type in EMPRESA_FIELDS:
+            for field_name, label, required, field_type in relatorios.EMPRESA_FIELDS:
                 value = ""
                 if self.existing:
                     val = self.existing[field_name]
                     if field_type == "date" and val:
-                        value = display_date(val)
+                        value = relatorios.display_date(val)
                     elif val:
                         value = str(val)
                 
@@ -226,7 +121,7 @@ class EmpresaForm(Static):
 
     def get_data(self) -> dict[str, Any]:
         data = {}
-        for field_name, label, required, field_type in EMPRESA_FIELDS:
+        for field_name, label, required, field_type in relatorios.EMPRESA_FIELDS:
             form_field = self.form_fields[field_name]
             value = form_field.get_value().strip()
             
@@ -234,7 +129,7 @@ class EmpresaForm(Static):
                 raise ValueError(f"Campo '{label}' é obrigatório.")
             
             if field_type == "date" and value:
-                value = normalize_date(value)
+                value = relatorios.normalize_date(value)
             
             data[field_name] = value or None
         
@@ -292,54 +187,7 @@ class ContaForm(Static):
         return data
 
 
-class MessageBox(Screen):
-    """Simple message display screen."""
-    
-    def __init__(self, title: str, message: str, **kwargs):
-        super().__init__(**kwargs)
-        self.title_text = title
-        self.message_text = message
-
-    def compose(self) -> ComposeResult:
-        with Container():
-            yield Label(self.title_text)
-            yield Label(self.message_text)
-            with Horizontal():
-                yield Button("OK", id="btn_ok")
-
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        if event.button.id == "btn_ok":
-            self.app.pop_screen()
-
-
-class ConfirmDialog(Screen):
-    """Confirmation dialog screen."""
-
-    BINDINGS = [
-        Binding("escape", "app.pop_screen", "Cancelar"),
-    ]
-
-    def __init__(self, title: str, message: str, on_confirm: Callable[[], None], **kwargs):
-        super().__init__(**kwargs)
-        self.title_text = title
-        self.message_text = message
-        self.on_confirm = on_confirm
-
-    def compose(self) -> ComposeResult:
-        with Container():
-            yield Label(self.title_text)
-            yield Label(self.message_text)
-            with Horizontal():
-                yield Button("Sim", id="btn_yes", variant="primary")
-                yield Button("Não", id="btn_no", variant="error")
-
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        if event.button.id == "btn_yes":
-            self.on_confirm()
-            self.app.pop_screen()
-        elif event.button.id == "btn_no":
-            self.app.pop_screen()
-
+# ============= SCREENS =============
 
 class EmpresaListScreen(Screen):
     """Screen for listing empresas."""
@@ -373,7 +221,7 @@ class EmpresaListScreen(Screen):
         table.add_columns("ID", "Nome", "CNPJ")
         table.cursor_type = "row"
 
-        rows = fetch_all(self.conn, "SELECT id, nome, cnpj FROM empresa ORDER BY id")
+        rows = relatorios.fetch_all(self.conn, "SELECT id, nome, cnpj FROM empresa ORDER BY id")
         for row in rows:
             table.add_row(str(row["id"]), row["nome"], row["cnpj"])
 
@@ -399,7 +247,7 @@ class EmpresaListScreen(Screen):
         if empresa_id is None:
             self.app.notify("Selecione uma empresa para editar.", severity="error")
             return
-        empresa = fetch_one(self.conn, "SELECT * FROM empresa WHERE id = ?", (empresa_id,))
+        empresa = relatorios.fetch_one(self.conn, "SELECT * FROM empresa WHERE id = ?", (empresa_id,))
         if empresa:
             self.app.push_screen(EmpresaFormScreen(self.conn, existing=empresa))
 
@@ -600,7 +448,7 @@ class ContaListScreen(Screen):
         table.clear()
         table.add_columns("Código", "Descrição", "Tipo", "Natureza")
         
-        rows = fetch_all(self.conn, "SELECT codigo, descricao, tipo, natureza FROM plano_contas ORDER BY codigo")
+        rows = relatorios.fetch_all(self.conn, "SELECT codigo, descricao, tipo, natureza FROM plano_contas ORDER BY codigo")
         for row in rows:
             table.add_row(row["codigo"], row["descricao"], row["tipo"], row["natureza"])
 
@@ -611,10 +459,473 @@ class ContaListScreen(Screen):
         table = self.query_one(DataTable)
         if table.cursor_row is not None:
             codigo = table.get_cell(table.cursor_row, 0)
-            conta = fetch_one(self.conn, "SELECT * FROM plano_contas WHERE codigo = ?", (codigo,))
+            conta = relatorios.fetch_one(self.conn, "SELECT * FROM plano_contas WHERE codigo = ?", (codigo,))
             if conta:
                 self.app.push_screen(ContaFormScreen(self.conn, existing=conta))
 
+class LivroDiarioScreen(Screen):
+    """Screen for displaying Livro Diário."""
+    
+    BINDINGS = [
+        Binding("escape", "app.pop_screen", "Voltar"),
+        Binding("n", "novo_lancamento", "Novo"),
+        Binding("e", "editar_lancamento", "Editar"),
+        Binding("d", "excluir_lancamento", "Excluir"),
+    ]
+
+    def __init__(self, conn: sqlite3.Connection, **kwargs):
+        super().__init__(**kwargs)
+        self.conn = conn
+
+    def compose(self) -> ComposeResult:
+        yield Header()
+        yield DataTable(id="lancamento_table")
+        with Horizontal():
+            yield Button("Novo", id="btn_novo", variant="primary")
+            yield Button("Editar", id="btn_editar")
+            yield Button("Excluir", id="btn_excluir", variant="error")
+        yield Footer()
+
+    def on_mount(self) -> None:
+        self.load_lancamentos()
+
+    def load_lancamentos(self) -> None:
+        table = self.query_one("#lancamento_table", DataTable)
+        table.clear()
+        table.add_columns("ID", "Data", "Histórico")
+        table.cursor_type = "row"
+
+        if EMPRESA_ATUAL is None:
+            return
+
+        rows = relatorios.fetch_all(
+            self.conn,
+            """
+            SELECT id, data, historico
+            FROM lancamento
+            WHERE empresa_id = ?
+            ORDER BY data, id
+            """,
+            (EMPRESA_ATUAL["id"],),
+        )
+
+        for row in rows:
+            table.add_row(str(row["id"]), relatorios.display_date(row["data"]), row["historico"] or "")
+
+    def get_selected_lancamento_id(self) -> Optional[int]:
+        table = self.query_one("#lancamento_table", DataTable)
+        if table.cursor_row is None:
+            return None
+        selected_id = table.get_cell(table.cursor_row, 0)
+        try:
+            return int(selected_id)
+        except (TypeError, ValueError):
+            return None
+
+    def action_novo_lancamento(self) -> None:
+        if EMPRESA_ATUAL is None:
+            self.app.notify("Selecione uma empresa antes de lançar.", severity="error")
+            return
+        self.app.push_screen(LancamentoEditScreen(self.conn), self._on_edit_closed)
+
+    def action_editar_lancamento(self) -> None:
+        if EMPRESA_ATUAL is None:
+            self.app.notify("Selecione uma empresa antes de editar.", severity="error")
+            return
+
+        lancamento_id = self.get_selected_lancamento_id()
+        if lancamento_id is None:
+            self.app.notify("Selecione um lançamento para editar.", severity="error")
+            return
+
+        self.app.push_screen(LancamentoEditScreen(self.conn, lancamento_id=lancamento_id), self._on_edit_closed)
+
+    def action_excluir_lancamento(self) -> None:
+        lancamento_id = self.get_selected_lancamento_id()
+        if lancamento_id is None:
+            self.app.notify("Selecione um lançamento para excluir.", severity="error")
+            return
+
+        def confirm_delete() -> None:
+            try:
+                self.conn.execute("DELETE FROM lancamento WHERE id = ?", (lancamento_id,))
+                self.conn.commit()
+                self.load_lancamentos()
+                self.app.notify("Lançamento excluído com sucesso!")
+            except sqlite3.DatabaseError as exc:
+                self.conn.rollback()
+                self.app.notify(f"Erro ao excluir lançamento: {exc}", severity="error")
+
+        self.app.push_screen(
+            ConfirmDialog(
+                title="Confirmar exclusão",
+                message="Deseja realmente excluir este lançamento?",
+                on_confirm=confirm_delete,
+            )
+        )
+
+    def _on_edit_closed(self, saved: Optional[bool]) -> None:
+        if saved:
+            self.load_lancamentos()
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "btn_novo":
+            self.action_novo_lancamento()
+        elif event.button.id == "btn_editar":
+            self.action_editar_lancamento()
+        elif event.button.id == "btn_excluir":
+            self.action_excluir_lancamento()
+
+
+class LancamentoEditScreen(Screen):
+    """Screen for creating or editing lançamento and its items."""
+
+    BINDINGS = [
+        Binding("escape", "app.pop_screen", "Voltar"),
+        Binding("ctrl+s", "salvar_lancamento", "Salvar"),
+    ]
+
+    def __init__(self, conn: sqlite3.Connection, lancamento_id: Optional[int] = None, **kwargs):
+        super().__init__(**kwargs)
+        self.conn = conn
+        self.lancamento_id = lancamento_id
+        self.items: list[dict[str, Any]] = []
+
+    def compose(self) -> ComposeResult:
+        yield Header()
+        with Container():
+            yield Label("Data do Lançamento")
+            yield Input(value=datetime.now().strftime("%d/%m/%Y"), id="lanc_data", placeholder="DD/MM/AAAA")
+            yield Label("Histórico")
+            yield Input(id="lanc_historico", placeholder="Histórico do lançamento")
+
+            yield Label("Conta (ID, código ou nome)")
+            yield Input(id="item_conta", placeholder="Ex.: 10, 1.1.1 ou Caixa")
+
+            yield Label("Tipo de Lançamento")
+            yield Select(
+                [("Débito", "D"), ("Crédito", "C")],
+                value="D",
+                id="item_tipo",
+            )
+
+            yield Label("Valor")
+            yield Input(id="item_valor", placeholder="0,00")
+
+            with Horizontal(id="lancamento_item_actions"):
+                yield Button("Incluir", id="btn_item_incluir", variant="primary")
+                yield Button("Excluir", id="btn_item_excluir", variant="error")
+                yield Button("Salvar Lançamento", id="btn_lanc_salvar", variant="success")
+
+            yield DataTable(id="lancamento_item_table")
+        yield Footer()
+
+    def on_mount(self) -> None:
+        table = self.query_one("#lancamento_item_table", DataTable)
+        table.add_columns("Código", "Nome Conta", "Tipo", "Valor")
+        table.cursor_type = "row"
+
+        if self.lancamento_id is not None:
+            self._load_existing_lancamento()
+
+    def _load_existing_lancamento(self) -> None:
+        if EMPRESA_ATUAL is None:
+            return
+
+        lanc = relatorios.fetch_one(
+            self.conn,
+            """
+            SELECT id, data, historico
+            FROM lancamento
+            WHERE id = ? AND empresa_id = ?
+            """,
+            (self.lancamento_id, EMPRESA_ATUAL["id"]),
+        )
+        if not lanc:
+            self.app.notify("Lançamento não encontrado para a empresa selecionada.", severity="error")
+            self.app.pop_screen()
+            return
+
+        self.query_one("#lanc_data", Input).value = relatorios.display_date(lanc["data"])
+        self.query_one("#lanc_historico", Input).value = lanc["historico"] or ""
+
+        rows = relatorios.fetch_all(
+            self.conn,
+            """
+            SELECT li.conta_id, li.tipo, li.valor, c.codigo, c.descricao
+            FROM lancamento_item li
+            JOIN plano_contas c ON c.id = li.conta_id
+            WHERE li.lancamento_id = ?
+            ORDER BY li.id
+            """,
+            (self.lancamento_id,),
+        )
+
+        self.items = [
+            {
+                "conta_id": row["conta_id"],
+                "codigo": row["codigo"],
+                "descricao": row["descricao"],
+                "tipo": row["tipo"],
+                "valor": float(row["valor"]),
+            }
+            for row in rows
+        ]
+        self._refresh_items_table()
+
+    def _find_account(self, raw_search: str) -> Optional[sqlite3.Row]:
+        if EMPRESA_ATUAL is None:
+            return None
+
+        text = raw_search.strip()
+        if not text:
+            return None
+
+        if text.isdigit():
+            account = relatorios.fetch_one(
+                self.conn,
+                """
+                SELECT id, codigo, descricao
+                FROM plano_contas
+                WHERE empresa_id = ? AND aceita_lancamento = 1 AND id = ?
+                """,
+                (EMPRESA_ATUAL["id"], int(text)),
+            )
+            if account:
+                return account
+
+        return relatorios.fetch_one(
+            self.conn,
+            """
+            SELECT id, codigo, descricao
+            FROM plano_contas
+            WHERE empresa_id = ?
+              AND aceita_lancamento = 1
+              AND (codigo = ? OR UPPER(descricao) = UPPER(?) OR UPPER(descricao) LIKE UPPER(?))
+            ORDER BY CASE
+                WHEN codigo = ? THEN 0
+                WHEN UPPER(descricao) = UPPER(?) THEN 1
+                ELSE 2
+            END,
+            codigo
+            LIMIT 1
+            """,
+            (EMPRESA_ATUAL["id"], text, text, f"%{text}%", text, text),
+        )
+
+    def _refresh_items_table(self) -> None:
+        table = self.query_one("#lancamento_item_table", DataTable)
+        table.clear()
+        for item in self.items:
+            table.add_row(
+                item["codigo"],
+                item["descricao"],
+                item["tipo"],
+                relatorios.format_currency(item["valor"]),
+            )
+
+    def _incluir_item(self) -> None:
+        if EMPRESA_ATUAL is None:
+            self.app.notify("Selecione uma empresa antes de incluir itens.", severity="error")
+            return
+
+        conta_raw = self.query_one("#item_conta", Input).value.strip()
+        if not conta_raw:
+            self.app.notify("Informe ID, código ou nome da conta.", severity="error")
+            return
+
+        conta = self._find_account(conta_raw)
+        if not conta:
+            self.app.notify("Conta não encontrada para a empresa atual.", severity="error")
+            return
+
+        tipo = self.query_one("#item_tipo", Select).value
+        if tipo not in ("D", "C"):
+            self.app.notify("Selecione Débito ou Crédito.", severity="error")
+            return
+
+        valor_raw = self.query_one("#item_valor", Input).value
+        try:
+            valor = relatorios.parse_decimal(valor_raw)
+        except ValueError as exc:
+            self.app.notify(str(exc), severity="error")
+            return
+
+        self.items.append(
+            {
+                "conta_id": int(conta["id"]),
+                "codigo": conta["codigo"],
+                "descricao": conta["descricao"],
+                "tipo": tipo,
+                "valor": valor,
+            }
+        )
+        self._refresh_items_table()
+
+        self.query_one("#item_conta", Input).value = ""
+        self.query_one("#item_valor", Input).value = ""
+        self.app.notify("Item incluído com sucesso!")
+
+    def _excluir_item(self) -> None:
+        table = self.query_one("#lancamento_item_table", DataTable)
+        if table.cursor_row is None:
+            self.app.notify("Selecione um item para excluir.", severity="error")
+            return
+
+        index = table.cursor_row
+        if index < 0 or index >= len(self.items):
+            self.app.notify("Item selecionado é inválido.", severity="error")
+            return
+
+        self.items.pop(index)
+        self._refresh_items_table()
+        self.app.notify("Item excluído.")
+
+    def action_salvar_lancamento(self) -> None:
+        self._salvar_lancamento()
+
+    def _salvar_lancamento(self) -> None:
+        if EMPRESA_ATUAL is None:
+            self.app.notify("Selecione uma empresa antes de salvar.", severity="error")
+            return
+
+        if not self.items:
+            self.app.notify("Inclua pelo menos um item no lançamento.", severity="error")
+            return
+
+        data_input = self.query_one("#lanc_data", Input).value.strip()
+        historico = self.query_one("#lanc_historico", Input).value.strip()
+        if not historico:
+            self.app.notify("Informe o histórico do lançamento.", severity="error")
+            return
+
+        try:
+            data_norm = relatorios.normalize_date(data_input)
+        except ValueError as exc:
+            self.app.notify(str(exc), severity="error")
+            return
+
+        try:
+            if self.lancamento_id is None:
+                cursor = self.conn.execute(
+                    """
+                    INSERT INTO lancamento (empresa_id, data, historico)
+                    VALUES (?, ?, ?)
+                    """,
+                    (EMPRESA_ATUAL["id"], data_norm, historico),
+                )
+                lancamento_id = cursor.lastrowid
+            else:
+                lancamento_id = self.lancamento_id
+                self.conn.execute(
+                    """
+                    UPDATE lancamento
+                    SET data = ?, historico = ?, empresa_id = ?
+                    WHERE id = ?
+                    """,
+                    (data_norm, historico, EMPRESA_ATUAL["id"], lancamento_id),
+                )
+                self.conn.execute("DELETE FROM lancamento_item WHERE lancamento_id = ?", (lancamento_id,))
+
+            for item in self.items:
+                self.conn.execute(
+                    """
+                    INSERT INTO lancamento_item (lancamento_id, conta_id, tipo, valor)
+                    VALUES (?, ?, ?, ?)
+                    """,
+                    (lancamento_id, item["conta_id"], item["tipo"], item["valor"]),
+                )
+
+            self.conn.commit()
+            self.app.notify("Lançamento salvo com sucesso!")
+            self.dismiss(True)
+        except sqlite3.DatabaseError as exc:
+            self.conn.rollback()
+            self.app.notify(f"Erro ao salvar lançamento: {exc}", severity="error")
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "btn_item_incluir":
+            self._incluir_item()
+        elif event.button.id == "btn_item_excluir":
+            self._excluir_item()
+        elif event.button.id == "btn_lanc_salvar":
+            self._salvar_lancamento()
+
+class RelatoriosScreen(Screen):
+    """Screen for displaying Relatórios."""
+    
+    BINDINGS = [
+        Binding("escape", "app.pop_screen", "Voltar"),
+    ]
+
+    def __init__(self, conn: sqlite3.Connection, **kwargs):
+        super().__init__(**kwargs)
+        self.conn = conn
+
+    def compose(self) -> ComposeResult:
+        yield Header()
+        yield Label("Relatórios - Em construção...")
+        yield Footer()    
+
+class SetEmpresaScreen(Screen):
+    """Screen for setting current empresa."""
+    
+    BINDINGS = [
+        Binding("escape", "app.pop_screen", "Voltar"),
+        Binding("ctrl+s", "definir_empresa", "Definir"),
+    ]
+
+    def __init__(self, conn: sqlite3.Connection, **kwargs):
+        super().__init__(**kwargs)
+        self.conn = conn
+
+    def compose(self) -> ComposeResult:
+        yield Header()
+        with Container():
+            yield Label("Definir Empresa Atual", id="set_empresa_title")
+            yield Label("Informe o ID da empresa:")
+            yield Input(placeholder="Ex.: 1", id="empresa_id_input")
+            with Horizontal():
+                yield Button("Definir", id="btn_definir", variant="primary")
+                yield Button("Cancelar", id="btn_cancelar")
+        yield Footer()            
+
+    def action_definir_empresa(self) -> None:
+        self._definir_empresa_atual()
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "btn_definir":
+            self._definir_empresa_atual()
+        elif event.button.id == "btn_cancelar":
+            self.app.pop_screen()
+
+    def _definir_empresa_atual(self) -> None:
+        global EMPRESA_ATUAL
+
+        empresa_id_text = self.query_one("#empresa_id_input", Input).value.strip()
+        if not empresa_id_text:
+            self.app.notify("Informe o ID da empresa.", severity="error")
+            return
+
+        try:
+            empresa_id = int(empresa_id_text)
+        except ValueError:
+            self.app.notify("ID da empresa deve ser um número inteiro.", severity="error")
+            return
+
+        empresa = relatorios.fetch_one(
+            self.conn,
+            "SELECT id, nome FROM empresa WHERE id = ?",
+            (empresa_id,),
+        )
+
+        if not empresa:
+            self.app.notify("Empresa não encontrada para o ID informado.", severity="error")
+            return
+
+        EMPRESA_ATUAL = empresa
+        self.app.notify(f"Empresa '{empresa['nome']}' definida com sucesso!")
+        self.dismiss(empresa)
 
 class MainScreen(Screen):
     """Main menu screen."""
@@ -624,6 +935,7 @@ class MainScreen(Screen):
         Binding("a", "livro_diario", "Livro Diário"),
         Binding("b", "relatorios", "Relatórios"),
         Binding("c", "cadastro_empresa", "Empresa"),
+        Binding("d", "set_empresa", "Definir Empresa"),
         Binding("e", "plano_contas", "Contas"),
     ]
 
@@ -635,37 +947,38 @@ class MainScreen(Screen):
         yield Header()
         with Container():
             yield Label("PJLA Contabilidade OFFLINE", id="title")
-            # with Vertical(classes="menu"):
-            #     yield Button("[A] Livro Diário", id="btn_livro_diario", variant="primary")
-            #     yield Button("[B] Relatórios", id="btn_relatorios")
-            #     yield Button("[C] Cadastro de Empresa", id="btn_empresa")
-            #     yield Button("[E] Plano de Contas", id="btn_plano_contas")
-            #     yield Button("[Q] Sair", id="btn_quit", variant="error")
+            yield Label(self._empresa_info_text(), id="empresa_info")
         yield Footer()
 
-    # def on_button_pressed(self, event: Button.Pressed) -> None:
-    #     if event.button.id == "btn_livro_diario":
-    #         self.action_livro_diario()
-    #     elif event.button.id == "btn_relatorios":
-    #         self.action_relatorios()
-    #     elif event.button.id == "btn_empresa":
-    #         self.action_cadastro_empresa()
-    #     elif event.button.id == "btn_plano_contas":
-    #         self.action_plano_contas()
-    #     elif event.button.id == "btn_quit":
-    #         self.app.action_quit()
+    def _empresa_info_text(self) -> str:
+        if EMPRESA_ATUAL is None:
+            return "Selecione uma empresa"
+        return f"Empresa: {EMPRESA_ATUAL['nome']}"
+
+    def _refresh_empresa_info(self) -> None:
+        empresa_info = self.query_one("#empresa_info", Label)
+        empresa_info.update(self._empresa_info_text())
+
+    def on_mount(self) -> None:
+        self._refresh_empresa_info()
 
     def action_livro_diario(self) -> None:
-        self.app.notify("Livro Diário em desenvolvimento")
+        self.app.push_screen(LivroDiarioScreen(self.conn))
 
     def action_relatorios(self) -> None:
-        self.app.notify("Relatórios em desenvolvimento")
+        self.app.push_screen(RelatoriosScreen(self.conn))
 
     def action_cadastro_empresa(self) -> None:
         self.app.push_screen(EmpresaListScreen(self.conn))
 
     def action_plano_contas(self) -> None:
         self.app.push_screen(ContaListScreen(self.conn))
+
+    def action_set_empresa(self) -> None:
+        self.app.push_screen(SetEmpresaScreen(self.conn), self._on_set_empresa_closed)
+
+    def _on_set_empresa_closed(self, _result: Optional[sqlite3.Row]) -> None:
+        self._refresh_empresa_info()
 
 
 # ============= MAIN APP =============
@@ -725,11 +1038,17 @@ class ContabilidadeApp(App):
         text-align: right;
         margin-right: 1;
     }
+
+    #lancamento_item_actions {
+        width: 100%;
+        align: center middle;
+        margin: 1 0;
+    }
     """
 
     def __init__(self):
         super().__init__()
-        self.conn = connect_db()
+        self.conn = relatorios.connect_db()
 
     def on_mount(self) -> None:
         self.push_screen(MainScreen(self.conn))

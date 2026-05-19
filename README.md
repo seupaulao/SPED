@@ -223,6 +223,8 @@ Todos os erros de banco de dados são tratados com:
 - ecd não foi iniciada
 - verificar como funciona historico para funcionário e calculos trabalhistas
 - precisa fazer plano de contas para funcionários ou só holerite ??
+- facilitar a escolha da conta no lancamento_item
+- na edicao do lancamento nao abre o formulario quando o usuario seleciona a conta no datatable e clica me editar
 
 ## Problemas - experiencia02.py - textual
 

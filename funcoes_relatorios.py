@@ -5,6 +5,10 @@ Assume conexão sqlite3 (DB API). Retorna estruturas em dicionários/listas.
 """
 
 from typing import List, Dict, Any, Optional
+from datetime import datetime
+from typing import Any, Iterable, Optional
+
+from pathlib import Path
 import sqlite3
 
 __all__ = [
@@ -15,6 +19,164 @@ __all__ = [
     "dfc",
     "to_number",
 ]
+
+DB_PATH = Path(__file__).with_name("contabilidade.db")
+SCHEMA_PATH = Path(__file__).with_name("banco_sqlite3.sql")
+
+EMPRESA_FIELDS = [
+    ("cnpj", "CNPJ", True, "text"),
+    ("nome", "NOME", True, "text"),
+    ("uf", "UF", False, "text"),
+    ("municipio", "MUNICIPIO", False, "text"),
+    ("data_inicio", "DATA DE INICIO", False, "date"),
+    ("data_fim", "DATA DE FIM", False, "date"),
+]
+
+
+# ============= DATABASE FUNCTIONS =============
+
+def normalize_date(value: str) -> str:
+    text = value.strip()
+    if not text:
+        return ""
+    for fmt in ("%d/%m/%Y", "%Y-%m-%d"):
+        try:
+            return datetime.strptime(text, fmt).strftime("%Y-%m-%d")
+        except ValueError:
+            continue
+    raise ValueError("Use o formato DD/MM/AAAA.")
+
+
+def display_date(value: Optional[str]) -> str:
+    if not value:
+        return ""
+    for fmt in ("%Y-%m-%d", "%d/%m/%Y"):
+        try:
+            return datetime.strptime(value, fmt).strftime("%d/%m/%Y")
+        except ValueError:
+            continue
+    return value
+
+
+def parse_decimal(value: str) -> float:
+    text = value.strip()
+    if "," in text and "." in text:
+        if text.rfind(",") > text.rfind("."):
+            text = text.replace(".", "").replace(",", ".")
+        else:
+            text = text.replace(",", "")
+    elif "," in text:
+        text = text.replace(".", "").replace(",", ".")
+    if not text:
+        raise ValueError("Informe um valor numérico.")
+    amount = float(text)
+    if amount <= 0:
+        raise ValueError("Informe um valor maior que zero.")
+    return amount
+
+
+def format_currency(value: Any) -> str:
+    amount = float(value or 0.0)
+    text = f"{amount:,.2f}"
+    return text.replace(",", "X").replace(".", ",").replace("X", ".")
+
+
+def connect_db() -> sqlite3.Connection:
+    db_exists = DB_PATH.exists()
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON")
+    ensure_runtime_schema(conn, db_exists=db_exists)
+    return conn
+
+
+def ensure_runtime_schema(conn: sqlite3.Connection, db_exists: bool) -> None:
+    if not db_exists and SCHEMA_PATH.exists():
+        conn.executescript(SCHEMA_PATH.read_text(encoding="utf-8"))
+        conn.commit()
+
+    columns = {row[1] for row in conn.execute("PRAGMA table_info(plano_contas)").fetchall()}
+    extra_columns = {
+        "grupo": "TEXT",
+        "dre_grupo": "TEXT",
+        "subgrupo": "TEXT",
+        "fluxo_caixa_tipo": "TEXT",
+    }
+    for column_name, column_type in extra_columns.items():
+        if column_name not in columns:
+            conn.execute(f"ALTER TABLE plano_contas ADD COLUMN {column_name} {column_type}")
+
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_lancamento_data ON lancamento(data)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_lancamento_item_conta ON lancamento_item(conta_id)")
+    conn.commit()
+
+
+def fetch_one(conn: sqlite3.Connection, sql: str, params: Iterable[Any] = ()) -> Optional[sqlite3.Row]:
+    return conn.execute(sql, tuple(params)).fetchone()
+
+
+def fetch_all(conn: sqlite3.Connection, sql: str, params: Iterable[Any] = ()) -> list[sqlite3.Row]:
+    return conn.execute(sql, tuple(params)).fetchall()
+
+
+def find_account(conn: sqlite3.Connection, empresa_id: int, raw_name: str) -> tuple[Optional[sqlite3.Row], str]:
+    normalized = raw_name.strip()
+    entry_type = "D"
+    if normalized.lower().startswith("a "):
+        entry_type = "C"
+        normalized = normalized[2:].strip()
+
+    account = fetch_one(
+        conn,
+        """
+        SELECT *
+        FROM plano_contas
+        WHERE empresa_id = ?
+          AND (UPPER(descricao) = UPPER(?) OR codigo = ? OR UPPER(descricao) LIKE UPPER(?))
+        ORDER BY CASE
+            WHEN UPPER(descricao) = UPPER(?) THEN 0
+            WHEN codigo = ? THEN 1
+            ELSE 2
+        END,
+        codigo
+        LIMIT 1
+        """,
+        (empresa_id, normalized, normalized, f"%{normalized}%", normalized, normalized),
+    )
+    return account, entry_type
+
+
+def fetch_lancamento(conn: sqlite3.Connection, empresa_id: int, lancamento_id: Any) -> Optional[sqlite3.Row]:
+    return fetch_one(
+        conn,
+        """
+        SELECT id, empresa_id, data, numero, historico
+        FROM lancamento
+        WHERE empresa_id = ? AND id = ?
+        """,
+        (empresa_id, lancamento_id),
+    )
+
+
+def fetch_lancamento_items(conn: sqlite3.Connection, lancamento_id: int) -> list[sqlite3.Row]:
+    return fetch_all(
+        conn,
+        """
+        SELECT li.id, li.conta_id, li.tipo, li.valor, li.historico, c.codigo, c.descricao
+        FROM lancamento_item li
+        JOIN plano_contas c ON c.id = li.conta_id
+        WHERE li.lancamento_id = ?
+        ORDER BY li.id
+        """,
+        (lancamento_id,),
+    )
+
+
+def summarize_items(items: list[dict[str, Any]]) -> tuple[float, float]:
+    total_debitos = sum(item["valor"] for item in items if item["tipo"] == "D")
+    total_creditos = sum(item["valor"] for item in items if item["tipo"] == "C")
+    return total_debitos, total_creditos
+
 
 
 def to_number(value: Any) -> float:
