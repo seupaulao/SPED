@@ -131,7 +131,6 @@ python pjlacontabilidade.py
 ```
 ├── pjlacontabilidade.py          # Versão original (CLI)
 ├── experiencia02.py              # Versão moderna (Textual)
-├── app.py                        # teste datatable com banco de dados sqlite = database.py, empresas.db
 ├── banco_sqlite3.sql             # Schema do banco de dados
 ├── contabilidade.db              # Base de dados (gerada automaticamente)
 ├── funcoes_relatorios.py         # Funções de relatórios
@@ -219,15 +218,48 @@ Todos os erros de banco de dados são tratados com:
 5. Validação automática: débito = crédito
 ```
 
-## 🔄 Roadmap Futuro
+## Problemas gerais
 
-- [ ] Relatório completo em PDF
-- [ ] Exportação em Excel
-- [ ] Integração com ECD (Escrituração Contábil Digital)
-- [ ] Suporte a múltiplos períodos
-- [ ] Dashboard com resumo financeiro
-- [ ] Autenticação de usuários
-- [ ] Sincronização com nuvem
+- ecd não foi iniciada
+- verificar como funciona historico para funcionário e calculos trabalhistas
+- precisa fazer plano de contas para funcionários ou só holerite ??
+- facilitar a escolha da conta no lancamento_item
+- na edicao do lancamento nao abre o formulario quando o usuario seleciona a conta no datatable e clica me editar
+
+## Problemas - experiencia02.py - textual
+
+- Empresa não está editando, excluindo - problema ao recuperar dado pelo datatable
+- Lançamento não está funcionando e deve ser construída
+- Ao incluir e salvar não reflete na listagem de imediato - empresas
+
+
+## Roadmap
+
+  - [ ] Cadastro da Administradora: Cliente - Escritorio de Contabilidade
+  - [ ] Configuracao da Empresa
+  - [ ] Usuario do Sistema
+  - [ ] Perfis de Acesso dos Usuarios - quem tem acesso a cada modulo
+  - [ ] Certificado Digital
+  - [ ] Definir e construir todos os modulos abaixo  
+      - Contabil
+        - Gerenciar como eh contruido os relatorios contabeis para entrega
+        - Numerar os Livros Diario, Caixa, Razao, Lalur
+        - SPED numero de ordem
+        - plano de conta referencial
+        - plano de conta por empresa
+        - integrar e importar dados de outros modulos
+        - encerramento de contas de resultado/apuracao resultado
+        - transferencia de lancamento entre contas
+        - fechamento/restauração
+        - controle do certificado digital
+        - controle de usuario
+      - Patrimonial
+      - Folha de Pagamento
+      - Fiscal
+      - Honorarios
+      - Protocolos    
+  
+
 
 ## 📝 Licença
 
