@@ -1,263 +1,172 @@
 # PJLA Contabilidade OFFLINE
 
-Aplicação de contabilidade offline com suporte completo a Livro Diário, Relatórios e Plano de Contas, desenvolvida em Python com banco de dados SQLite.
+Aplicação de contabilidade offline em Python + SQLite, com interface TUI baseada em Textual e versão CLI legada.
 
-## 📋 Versões
+## Visão Geral
 
-### `pjlacontabilidade.py` (Original)
-Versão original com interface de linha de comando (CLI) usando inputs e prints.
+O projeto possui duas interfaces principais:
 
-**Recursos:**
-- ✅ Cadastro de empresas (criar, alterar, listar, excluir)
-- ✅ Livro Diário (criar, corrigir, apagar, visualizar lançamentos)
-- ✅ Plano de Contas (nova conta, editar, listar, detalhar)
-- ✅ Relatórios (Balancete, Balanço Patrimonial, DRE, DVA)
-- ✅ ECD (em desenvolvimento)
-- ✅ Validação de datas, valores decimais e moeda
-- ✅ Banco de dados SQLite com PRAGMA foreign_keys
+1. [pjlacontabilidade.py](pjlacontabilidade.py): versão CLI original.
+2. [experiencia02.py](experiencia02.py): versão Textual modularizada.
 
----
+## Arquitetura Atual da Versão Textual
 
-### `experiencia02.py` (Moderna com Textual)
-Versão refatorada com interface moderna usando a biblioteca **Textual**, oferecendo uma experiência de usuário profissional com navegação intuitiva e formulários aprimorados.
+O arquivo [experiencia02.py](experiencia02.py) foi simplificado e agora concentra:
 
-## 🎨 Melhorias Implementadas na Versão Textual
+1. `MainScreen` (menu principal).
+2. Importação das telas.
+3. Ponto de entrada da aplicação (`run_app(MainScreen)`).
 
-### **1. Interface Moderna**
-- Menu principal com botões visuais e atalhos de teclado
-- Telas organizadas com Header e Footer
-- Notificações toast para feedback do usuário
-- Design responsivo e elegante
+As demais telas foram separadas por domínio no padrão `experiencia02_tela_NOME_TELA.py`.
 
-### **2. Componentes Reutilizáveis**
-- **`FormField`** - Campo de entrada com label e validação
-- **`EmpresaForm`** - Formulário completo para dados de empresa
-- **`ContaForm`** - Formulário dinâmico para cadastro de contas
-- **`MessageBox`** - Caixa de mensagem reutilizável
+## Estrutura de Arquivos (Textual)
 
-### **3. Screens (Telas) Implementadas**
-- **`MainScreen`** - Menu principal interativo
-- **`EmpresaListScreen`** - Listagem de empresas com DataTable
-- **`EmpresaFormScreen`** - Cadastro/edição de empresa com validação
-- **`ContaListScreen`** - Listagem de contas com ações inline
-- **`ContaFormScreen`** - Cadastro/edição de contas com validação
+- [experiencia02.py](experiencia02.py): tela principal e entrada.
+- [experiencia02_tela_app.py](experiencia02_tela_app.py): bootstrap do app Textual e CSS global.
+- [experiencia02_tela_estado.py](experiencia02_tela_estado.py): estado compartilhado (empresa atual).
+- [experiencia02_tela_componentes.py](experiencia02_tela_componentes.py): componentes reutilizáveis (`FormField`, `ConfirmDialog`, etc.).
+- [experiencia02_tela_empresa.py](experiencia02_tela_empresa.py): CRUD de Empresa.
+- [experiencia02_tela_contas.py](experiencia02_tela_contas.py): CRUD de Plano de Contas.
+- [experiencia02_tela_livro_diario.py](experiencia02_tela_livro_diario.py): Livro Diário e edição de lançamentos.
+- [experiencia02_tela_relatorios.py](experiencia02_tela_relatorios.py): tela de relatórios.
+- [experiencia02_tela_set_empresa.py](experiencia02_tela_set_empresa.py): seleção de empresa atual.
+- [experiencia02_tela_plano_referencial.py](experiencia02_tela_plano_referencial.py): CRUD de Plano de Contas Referencial.
+- [experiencia02_tela_usuarios.py](experiencia02_tela_usuarios.py): CRUD de Usuários.
+- [experiencia02_tela_centro_custos.py](experiencia02_tela_centro_custos.py): CRUD de Centro de Custos.
+- [experiencia02_tela_tags.py](experiencia02_tela_tags.py): CRUD de Tags.
+- [experiencia02_tela_certificados_digitais.py](experiencia02_tela_certificados_digitais.py): CRUD de Certificados Digitais.
+- [experiencia02_tela_assinaturas_digitais.py](experiencia02_tela_assinaturas_digitais.py): CRUD de Assinaturas Digitais.
 
-### **4. Navegação Melhorada**
-- Stack de telas com `push_screen()` e `pop_screen()`
-- Atalhos de teclado intuitivos (Ctrl+S para salvar, ESC para voltar)
-- Transições suaves entre telas
-- Validação de formulários antes da submissão
+## Funcionalidades Implementadas
 
-### **5. DataTable para Listagem**
-- Visualização profissional de dados
-- Navegação com setas do teclado
-- Integração com ações (editar, nova entrada)
+### Núcleo contábil
 
-## ⌨️ Atalhos de Teclado
+- Cadastro e edição de empresas.
+- Definição da empresa ativa para o contexto de trabalho.
+- Cadastro e edição de plano de contas por empresa.
+- Livro diário com inclusão, edição e exclusão de lançamentos e itens.
 
-### Menu Principal
+### Cadastros auxiliares
+
+- Plano de contas referencial.
+- Usuários.
+- Centro de custos.
+- Tags.
+- Certificados digitais.
+- Assinaturas digitais.
+
+## Atalhos de Teclado
+
+### Menu principal
+
 | Tecla | Ação |
 |-------|------|
-| **A** | Livro Diário |
-| **B** | Relatórios |
-| **C** | Cadastro de Empresa |
-| **E** | Plano de Contas |
-| **Q** | Sair |
+| A | Livro Diário |
+| B | Relatórios |
+| C | Empresa |
+| D | Definir Empresa |
+| E | Contas |
+| F | Plano Referencial |
+| G | Usuários |
+| H | Centro de Custos |
+| I | Tags |
+| J | Certificados Digitais |
+| K | Assinaturas Digitais |
+| Q | Sair |
 
-### Em Formulários
+### Listagens e formulários
+
 | Tecla | Ação |
 |-------|------|
-| **Ctrl+S** | Salvar |
-| **ESC** | Cancelar |
+| N | Novo registro (listagens) |
+| E | Editar registro selecionado (listagens) |
+| D | Excluir registro selecionado (listagens) |
+| Ctrl+S | Salvar (formulários) |
+| Esc | Voltar/Cancelar |
 
-### Em Listagens
-| Tecla | Ação |
-|-------|------|
-| **N** | Nova entrada |
-| **E** | Editar selecionado |
-| **ESC** | Voltar |
+## Banco de Dados
 
-## 🗄️ Estrutura do Banco de Dados
+Schemas principais:
 
-### Tabelas Principais
-- **`empresa`** - Cadastro de empresas
-- **`plano_contas`** - Plano de contas com suporte a conta analítica/sintética
-- **`lancamento`** - Cabeçalho de lançamentos (escrituração)
-- **`lancamento_item`** - Itens de lançamento (débito/crédito)
-- **`mapa_demonstracoes`** - Mapeamento para demonstrações
+1. [banco_sqlite3.sql](banco_sqlite3.sql)
+2. [banco_sqlite3_novo.sql](banco_sqlite3_novo.sql)
 
-### Campos de Empresa
-| Campo | Tipo | Obrigatório |
-|-------|------|------------|
-| `cnpj` | TEXT | Sim |
-| `nome` | TEXT | Sim |
-| `uf` | TEXT | Não |
-| `municipio` | TEXT | Não |
-| `data_inicio` | DATE | Não |
-| `data_fim` | DATE | Não |
+Tabelas relevantes para a versão Textual:
 
-### Campos de Plano de Contas
-| Campo | Tipo | Descrição |
-|-------|------|-----------|
-| `empresa_id` | FK | Referência à empresa |
-| `codigo` | TEXT | Ex: 01.01.01 |
-| `descricao` | TEXT | Nome da conta |
-| `tipo` | TEXT | A (Analítica) ou S (Sintética) |
-| `natureza` | TEXT | D (Devedora) ou C (Credora) |
-| `grupo` | TEXT | Agrupamento |
-| `dre_grupo` | TEXT | Classificação DRE |
-| `subgrupo` | TEXT | Subagrupamento |
-| `fluxo_caixa_tipo` | TEXT | Tipo de fluxo de caixa |
+- `empresa`
+- `plano_contas`
+- `lancamento`
+- `lancamento_item`
+- `plano_contas_referencial`
+- `usuarios`
+- `centro_custo`
+- `tags`
+- `certificados_digitais`
+- `assinaturas_digitais`
 
-## 🚀 Como Usar
+## Execução
 
 ### Requisitos
+
+Instale as dependências do projeto (preferencialmente em ambiente virtual):
+
 ```bash
-pip install textual
+pip install -r requirements.txt
 ```
 
-### Executar a Aplicação
+### Executar versão Textual
+
 ```bash
 python experiencia02.py
 ```
 
-### Usar a Versão CLI Original
+### Executar versão CLI legada
+
 ```bash
 python pjlacontabilidade.py
 ```
 
-## 📁 Estrutura de Arquivos
+## Validação e Qualidade
 
-```
-├── pjlacontabilidade.py          # Versão original (CLI)
-├── experiencia02.py              # Versão moderna (Textual)
-├── banco_sqlite3.sql             # Schema do banco de dados
-├── contabilidade.db              # Base de dados (gerada automaticamente)
-├── funcoes_relatorios.py         # Funções de relatórios
-└── README.md                     # Este arquivo
+Para validar sintaxe da versão modular:
+
+```bash
+python -m py_compile experiencia02.py experiencia02_tela_*.py
 ```
 
-## 🔧 Funcionalidades Principais
+## Situação Atual e Próximos Passos
 
-### Cadastro de Empresa
-- ✅ Criar nova empresa
-- ✅ Alterar dados da empresa
-- ✅ Listar empresas (paginação na versão CLI)
-- ✅ Excluir empresa e todos seus dados
+### Concluído recentemente
 
-### Livro Diário
-- ✅ Criar lançamentos (escrituração)
-- ✅ Validação de débito = crédito
-- ✅ Corrigir lançamentos existentes
-- ✅ Apagar lançamentos
-- ✅ Visualizar últimos lançamentos
-- 🔜 Lançamentos de estorno
-- 🔜 Lançamentos de ajuste
+- Modularização da versão Textual por tela.
+- Padronização de telas CRUD com DataTable + formulário + confirmação de exclusão.
+- Inclusão dos novos módulos de cadastro auxiliar no menu principal.
 
-### Plano de Contas
-- ✅ Criar nova conta
-- ✅ Editar conta existente
-- ✅ Detalhar conta (mostrar todos os campos)
-- ✅ Listar todas as contas
-- 🔜 Excluir conta com validação
+### Itens em evolução
 
-### Relatórios
-- ✅ Balancete (período)
-- ✅ Balanço Patrimonial
-- ✅ DRE (Demonstração de Resultado do Exercício)
-- ✅ DVA (Demonstração de Valor Adicionado)
+- Evoluir a tela de relatórios para além do placeholder.
+- Melhorar UX de busca/seleção de contas no lançamento.
+  - não permite entrar com contas, não está reconhecendo a empresa pre-selecionada
+  - ao lado do campo conta deve haver um botão que abre uma modal com o datatable
+  e nele o plano de contas da empresa pre-selecionada. Quando o usuario clicar na
+  conta, ela deve voltar o codigo para o campo da tela de lancamento_item
+  - Fazer 2 modos de entrada do diario:
 
-## 🎯 Validações Implementadas
-
-### Datas
-- Formato: DD/MM/AAAA ou YYYY-MM-DD
-- Normalização automática para YYYY-MM-DD
-
-### Valores Monetários
-- Suporte a separadores: . (ponto) e , (vírgula)
-- Valores devem ser maiores que zero
-- Formatação em BRL com duas casas decimais
-
-### Campos Obrigatórios
-- Validação em tempo de entrada
-- Mensagens de erro descritivas
-- Rollback de transações em caso de erro
-
-## 🔐 Segurança
-
-- ✅ Transações ACID com BEGIN/COMMIT/ROLLBACK
-- ✅ Foreign keys habilitadas (PRAGMA)
-- ✅ Índices para melhor performance
-- ✅ Validação de entrada em todos os campos
-
-## 🐛 Tratamento de Erros
-
-Todos os erros de banco de dados são tratados com:
-- Rollback automático
-- Mensagens de erro amigáveis
-- Opção de repetir a operação
-
-## 📊 Exemplo de Uso
-
-### Criar uma Empresa
+  1. Igual a `pjlacontabilidade.py`, ou seja identificando o debito e o credito através da 
+  descricao do campo no formato das formulas de escrituracao:
 ```
-1. Pressionar [C] no menu principal
-2. Clicar em "Salvar"
-3. Preencher formulário com:
-   - CNPJ: 12.345.678/0001-90
-   - Nome: Empresa Exemplo LTDA
-4. Pressionar Ctrl+S
+  conta             VALOR
+  a conta           VALOR
 ```
+  A particula 'a' na frente da conta indica que o lancamento é a crédito, caso contrário
+  o lançamento é a debito.
 
-### Registrar Lançamento
-```
-1. Pressionar [A] para Livro Diário
-2. Selecionar empresa
-3. Preencher data, histórico e número do documento
-4. Adicionar contas com D (débito) ou A (crédito)
-5. Validação automática: débito = crédito
-```
+  Para validar o lançamento: a soma dos lancamentos_item de crédito deve ser igual a soma dos 
+  lançamentos_item a debito
 
-## Problemas gerais
-
-- ecd não foi iniciada
-- verificar como funciona historico para funcionário e calculos trabalhistas
-- precisa fazer plano de contas para funcionários ou só holerite ??
-- facilitar a escolha da conta no lancamento_item
-- na edicao do lancamento nao abre o formulario quando o usuario seleciona a conta no datatable e clica me editar
-
-## Problemas - experiencia02.py - textual
-
-- Empresa não está editando, excluindo - problema ao recuperar dado pelo datatable
-- Lançamento não está funcionando e deve ser construída
-- Ao incluir e salvar não reflete na listagem de imediato - empresas
-
-
-## Roadmap
-
-  - [ ] Cadastro da Administradora: Cliente - Escritorio de Contabilidade
-  - [ ] Configuracao da Empresa
-  - [ ] Usuario do Sistema
-  - [ ] Perfis de Acesso dos Usuarios - quem tem acesso a cada modulo
-  - [ ] Certificado Digital
-  - [ ] Definir e construir todos os modulos abaixo  
-      - Contabil
-        - Gerenciar como eh contruido os relatorios contabeis para entrega
-        - Numerar os Livros Diario, Caixa, Razao, Lalur
-        - SPED numero de ordem
-        - plano de conta referencial
-        - plano de conta por empresa
-        - integrar e importar dados de outros modulos
-        - encerramento de contas de resultado/apuracao resultado
-        - transferencia de lancamento entre contas
-        - fechamento/restauração
-        - controle do certificado digital
-        - controle de usuario
-      - Patrimonial
-      - Folha de Pagamento
-      - Fiscal
-      - Honorarios
-      - Protocolos    
+  2. De acordo com a tela já existente em `experiencia02_tela_livro_diario.py` 
+- Revisar consistência entre nomes de tabelas/FKs no schema novo para módulos avançados.
+- Definir controle de acesso por perfil de usuário.
   
 
 
@@ -271,6 +180,7 @@ Este projeto é de código aberto e pode ser utilizado livremente.
 
 ---
 
-**Versão Atual:** 2.0 (Textual UI)  
-**Data de Atualização:** 2026-05-17  
+**Versão Atual:** 2.1 (Textual UI modular)  
+**Data de Atualização:** 2026-05-20  
 **Status:** Ativo - Em desenvolvimento
+
