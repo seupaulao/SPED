@@ -167,6 +167,27 @@ python -m py_compile experiencia02.py experiencia02_tela_*.py
   2. De acordo com a tela já existente em `experiencia02_tela_livro_diario.py` 
 - Revisar consistência entre nomes de tabelas/FKs no schema novo para módulos avançados.
 - Definir controle de acesso por perfil de usuário.
+
+- No MainScreen colocar o componente Select e criar as opções conforme
+as telas relacionadas da aplicação:
+  - Definir Empresa
+  - Empresa
+  - Livro Diário
+  - Assinaturas Digitais
+  - Certificados Digitais
+  - Centro de Custos
+  - Plano Contas Referencial
+  - Plano Contas
+  - Relatorios
+  - Usuarios
+  - Tags
+  - Sair
+
+- Em Footer deixar apenas as seguintes opções:
+  - Sair
+  - Definir Empresa
+  - Empresa
+  - Livro Diário
   
 
 
