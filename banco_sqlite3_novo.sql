@@ -33,20 +33,13 @@ VALUES
 (lower(hex(randomblob(16))), 'BALANCETE', 'Balancete');
 
 CREATE TABLE plano_contas_referencial (
-    id TEXT PRIMARY KEY,
-
-    parent_id TEXT REFERENCES plano_contas_referencial(id),
-
+    id INTEGER PRIMARY KEY,
     codigo TEXT NOT NULL,
     nome TEXT NOT NULL,
-
-    tipo_conta TEXT NOT NULL,
-    level INTEGER NOT NULL DEFAULT 1,
-    aceita_entrada INTEGER DEFAULT 0,
-    is_ativo INTEGER DEFAULT 1,
     tipo TEXT,
     natureza TEXT,
     nivel INTEGER,
+    parent_id INTEGER REFERENCES plano_contas_referencial(id),
     grupo TEXT,
     dre_grupo TEXT,
     fluxo_caixa_tipo TEXT,
@@ -54,10 +47,12 @@ CREATE TABLE plano_contas_referencial (
     excluded_at TEXT
 );
 
+--(id, empresa_id, codigo, descricao, tipo, natureza, nivel, conta_pai_id, codigo_referencial, aceita_lancamento, created_at, grupo, subgrupo, dre_grupo, fluxo_caixa_tipo, excluido_at)
+
 CREATE TABLE plano_contas (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   empresa_id INTEGER REFERENCES empresa(id),
-  plano_contas_referencial_id TEXT REFERENCES plano_contas_referencial(id),
+  plano_contas_referencial_id INTEGER REFERENCES plano_contas_referencial(id),
   codigo TEXT NOT NULL,
   descricao TEXT NOT NULL,
   tipo TEXT NOT NULL,
@@ -66,11 +61,11 @@ CREATE TABLE plano_contas (
   conta_pai_id INTEGER REFERENCES plano_contas(id),
   codigo_referencial TEXT,
   aceita_lancamento INTEGER DEFAULT 1,
-  created_at TEXT DEFAULT (datetime('now')),
   grupo TEXT,
   subgrupo TEXT,
   dre_grupo TEXT,
   fluxo_caixa_tipo TEXT,
+  created_at TEXT DEFAULT (datetime('now')),
   excluido_at TEXT
 );
 
