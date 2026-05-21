@@ -28,6 +28,7 @@ class CertificadoDigitalFormScreen(Screen):
 
     def compose(self) -> ComposeResult:
         yield Header()
+        yield Label("PJLA Contabilidade - Certificados Digitais", id="title")
         with Container():
             yield Label("Empresa ID*")
             yield Input(value=str(self.existing["empresa_id"] or "") if self.existing else "", id="cert_empresa_id")

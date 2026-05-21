@@ -26,6 +26,32 @@ class ContabilidadeApp(App):
         color: $text;
     }
 
+    #empresa_info {
+        width: 100%;
+        height: 1;
+        content-align: center middle;
+        background: $surface;
+    }
+
+    #menu_container {
+        align: center middle;
+        height: 1fr;
+        width: 100%;
+    }
+
+    #menu_label {
+        width: 100%;
+        height: 1;
+        content-align: center middle;
+        margin-bottom: 1;
+    }
+
+    #menu_select {
+        width: 50;
+        height: auto;
+        border: solid $accent;
+    }
+
     .menu {
         align: center middle;
         width: 40;

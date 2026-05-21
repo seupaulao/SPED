@@ -20,6 +20,6 @@ class RelatoriosScreen(Screen):
 
     def compose(self) -> ComposeResult:
         yield Header()
-        yield Label("Relatórios - Em construção...")
+        yield Label("PJLA Contabilidade - Relatórios - Em construção...")
         yield Footer()    
 

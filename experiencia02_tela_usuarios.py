@@ -28,6 +28,7 @@ class UsuarioFormScreen(Screen):
 
     def compose(self) -> ComposeResult:
         yield Header()
+        yield Label("PJLA Contabilidade - Usuários", id="title")
         with Container():
             yield Label("Nome*")
             yield Input(value=self.existing["nome"] if self.existing else "", id="u_nome")

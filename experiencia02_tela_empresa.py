@@ -7,7 +7,7 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, Horizontal
 from textual.screen import Screen
-from textual.widgets import Button, DataTable, Footer, Header, Static
+from textual.widgets import Button, DataTable, Footer, Header, Static, Label
 
 import funcoes_relatorios as relatorios
 from experiencia02_tela_componentes import ConfirmDialog, EmpresaForm
@@ -29,6 +29,8 @@ class EmpresaListScreen(Screen):
 
     def compose(self) -> ComposeResult:
         yield Header()
+        yield Label("PJLA Contabilidade - Empresas", id="title")
+
         yield DataTable(id="empresa_table")
         with Horizontal():
             yield Button("Novo", id="btn_novo", variant="primary")

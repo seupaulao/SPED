@@ -28,6 +28,7 @@ class CentroCustoFormScreen(Screen):
 
     def compose(self) -> ComposeResult:
         yield Header()
+        yield Label("PJLA Contabilidade - Centro de Custos", id="title")
         with Container():
             yield Label("Empresa ID*")
             yield Input(value=str(self.existing["empresa_id"] or "") if self.existing else "", id="cc_empresa_id")

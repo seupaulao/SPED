@@ -30,6 +30,7 @@ class LivroDiarioScreen(Screen):
 
     def compose(self) -> ComposeResult:
         yield Header()
+        yield Label("PJLA Contabilidade - Livro Diário", id="title")
         yield DataTable(id="lancamento_table")
         with Horizontal():
             yield Button("Novo", id="btn_novo", variant="primary")
@@ -146,6 +147,7 @@ class LancamentoEditScreen(Screen):
 
     def compose(self) -> ComposeResult:
         yield Header()
+        yield Label("PJLA Contabilidade - Lançamentos", id="title")
         with Container():
             yield Label("Data do Lançamento")
             yield Input(value=datetime.now().strftime("%d/%m/%Y"), id="lanc_data", placeholder="DD/MM/AAAA")

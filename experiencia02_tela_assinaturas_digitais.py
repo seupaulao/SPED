@@ -28,6 +28,7 @@ class AssinaturaDigitalFormScreen(Screen):
 
     def compose(self) -> ComposeResult:
         yield Header()
+        yield Label("PJLA Contabilidade - Assinaturas Digitais", id="title")
         with Container():
             yield Label("ECD File ID*")
             yield Input(value=self.existing["ecd_file_id"] if self.existing else "", id="as_ecd_file_id")

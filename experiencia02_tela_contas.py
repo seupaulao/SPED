@@ -7,7 +7,7 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, Horizontal
 from textual.screen import Screen
-from textual.widgets import Button, DataTable, Footer, Header
+from textual.widgets import Button, DataTable, Footer, Header, Label
 
 import funcoes_relatorios as relatorios
 from experiencia02_tela_componentes import ContaForm
@@ -27,6 +27,7 @@ class ContaFormScreen(Screen):
 
     def compose(self) -> ComposeResult:
         yield Header()
+        yield Label("PJLA Contabilidade - Contas", id="title")
         with Container():
             yield ContaForm(existing=self.existing, id="conta_form")
             with Horizontal():

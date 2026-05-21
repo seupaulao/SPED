@@ -27,6 +27,7 @@ class PlanoReferencialFormScreen(Screen):
 
     def compose(self) -> ComposeResult:
         yield Header()
+        yield Label("PJLA Contabilidade - Plano de Contas Referencial", id="title")
         with Container():
             yield Label("Código*")
             yield Input(value=self.existing["codigo"] if self.existing else "", id="pr_codigo")
