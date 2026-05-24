@@ -32,13 +32,6 @@ CREATE TABLE report_types (
     name TEXT NOT NULL
 );
 
-INSERT INTO report_types (code, name)
-VALUES
-('BALANCO', 'Balanço Patrimonial'),
-('DRE', 'Demonstração do Resultado'),
-('DFC', 'Demonstração do Fluxo de Caixa'),
-('DVA', 'Demonstração do Valor Adicionado'),
-('BALANCETE', 'Balancete');
 
 -- =========================================================
 -- PLANO DE CONTAS REFERENCIAL
@@ -208,13 +201,7 @@ CREATE TABLE regras (
     name TEXT NOT NULL
 );
 
-INSERT INTO regras (code, name)
-VALUES
-('SUPER_ADMIN', 'Super Administrador'),
-('ACCOUNTANT', 'Contador'),
-('ASSISTANT', 'Assistente Contábil'),
-('AUDITOR', 'Auditor'),
-('CLIENT', 'Cliente');
+
 
 CREATE TABLE permissoes (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -222,19 +209,7 @@ CREATE TABLE permissoes (
     descricao TEXT
 );
 
-INSERT INTO permissoes (code, descricao)
-VALUES
-('COMPANY_VIEW', 'Visualizar empresas'),
-('COMPANY_EDIT', 'Editar empresas'),
-('ACCOUNT_VIEW', 'Visualizar plano de contas'),
-('ACCOUNT_EDIT', 'Editar plano de contas'),
-('ENTRY_VIEW', 'Visualizar lançamentos'),
-('ENTRY_CREATE', 'Criar lançamentos'),
-('ENTRY_EDIT', 'Editar lançamentos'),
-('REPORT_VIEW', 'Visualizar relatórios'),
-('REPORT_EDIT', 'Editar relatórios'),
-('SPED_EXPORT', 'Exportar SPED'),
-('ECD_SIGN', 'Assinar ECD');
+
 
 CREATE TABLE regra_permissao (
     role_id UUID REFERENCES regras(id),
@@ -282,14 +257,7 @@ CREATE TABLE sped_natureza (
     description TEXT NOT NULL
 );
 
-INSERT INTO sped_natureza (code, description)
-VALUES
-('01', 'Contas de Ativo'),
-('02', 'Contas de Passivo'),
-('03', 'Patrimônio Líquido'),
-('04', 'Receitas'),
-('05', 'Custos'),
-('06', 'Despesas');
+
 
 -- =========================================================
 -- VERSÕES DE RELATÓRIOS
