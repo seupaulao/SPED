@@ -9,8 +9,10 @@ import funcoes_relatorios as relatorios
 
 
 APP_TITLE = "PJLA Contabilidade OFFLINE"
-DB_PATH = Path(__file__).with_name("contabilidade.db")
-SCHEMA_PATH = Path(__file__).with_name("banco_sqlite3.sql")
+BASE_DIR = Path(__file__).resolve().parent.parent
+DB_PATH = BASE_DIR / "contabilidade_simples.db"
+
+SCHEMA_PATH = BASE_DIR / "banco_sqlite3.sql"
 EMPRESA_FIELDS = [
     ("cnpj", "CNPJ", True, "text"),
     ("nome", "NOME", True, "text"),
