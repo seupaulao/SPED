@@ -423,6 +423,10 @@ def prompt_lancamento_items(
     items: list[dict[str, Any]] = []
     while True:
         raw_account = input("qual a conta? ").strip()
+        if raw_account.lower() == "?" or raw_account.lower() == "help":
+            print("Digite o nome ou código da conta. Use 'A ' antes do nome para indicar que é um CRÉDITO.")
+            listar_contas_empresa(conn, empresa)
+            continue
         if raw_account == ".":
             break
         if not raw_account:
@@ -532,7 +536,7 @@ def save_lancamento(conn: sqlite3.Connection, empresa_id: int, header: dict[str,
     cur.execute(
         """
         INSERT INTO lancamento (empresa_id, data, numero, historico)
-        VALUES (?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?)
         """,
         (empresa_id, header["data"], header["numero"], header["historico"]),
     )
@@ -541,7 +545,7 @@ def save_lancamento(conn: sqlite3.Connection, empresa_id: int, header: dict[str,
         cur.execute(
             """
             INSERT INTO lancamento_item (lancamento_id, conta_id, tipo, valor)
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?)
             """,
             (lancamento_id, item["conta_id"], item["tipo"], item["valor"]),
         )
@@ -567,7 +571,7 @@ def replace_lancamento(
         conn.execute(
             """
             INSERT INTO lancamento_item (lancamento_id, conta_id, tipo, valor)
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?)
             """,
             (lancamento_id, item["conta_id"], item["tipo"], item["valor"]),
         )
@@ -908,6 +912,18 @@ def detalhar_conta(conn: sqlite3.Connection) -> None:
 
 def listar_contas(conn: sqlite3.Connection) -> None:
     rows = fetch_all(conn, "SELECT codigo, descricao, tipo, natureza FROM plano_contas ORDER BY codigo")
+    if not rows:
+        pause("Nenhuma conta encontrada. Clique ENTER para voltar ao submenu.")
+        return
+
+    print("\nCÓDIGO | DESCRIÇÃO | TIPO | NATUREZA")
+    print("-" * 50)
+    for row in rows:
+        print(f"{row['codigo']:<10} | {row['descricao']:<20} | {row['tipo']:<4} | {row['natureza']:<8}")
+    pause("Clique ENTER para voltar ao submenu.")
+
+def listar_contas_empresa(conn: sqlite3.Connection, empresa: dict) -> None:
+    rows = fetch_all(conn, "SELECT codigo, descricao, tipo, natureza FROM plano_contas WHERE empresa_id = ? ORDER BY codigo", (empresa['id'],))
     if not rows:
         pause("Nenhuma conta encontrada. Clique ENTER para voltar ao submenu.")
         return
