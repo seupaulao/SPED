@@ -1,5 +1,15 @@
 PRAGMA foreign_keys = ON;
 
+
+create table nota_fiscal (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  numero INTEGER,
+  codigo TEXT,
+  chave_acesso TEXT,
+  situacao TEXT,
+  data_emissao TEXT
+);
+
 CREATE TABLE empresa (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   cnpj TEXT NOT NULL,
@@ -9,7 +19,8 @@ CREATE TABLE empresa (
   data_inicio TEXT,
   data_fim TEXT,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  excluido_at TEXT
+  excluido_at TEXT,
+  viabilidade TEXT
 );
 
 CREATE TABLE plano_contas (

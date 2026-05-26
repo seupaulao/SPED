@@ -7,10 +7,22 @@ datasource db {
  // url      = env("DATABASE_URL")
 }
 
+model NotaFiscal {
+  id           Int       @id @default(autoincrement())
+  numero       Int
+  codigo       String
+  chaveAcesso  String
+  situacao     String
+  dataEmissao  DateTime
+
+  @@map("nota_fiscal")
+}
+
 model Empresa {
   id          Int       @id @default(autoincrement())
   cnpj        String
   nome        String
+  viabilidade String?
   uf          String?
   municipio   String?
   dataInicio  DateTime? @map("data_inicio")
