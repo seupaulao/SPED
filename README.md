@@ -7,12 +7,20 @@ Aplicação de contabilidade em Python
 - banco: contabilidade_simples.db
 
 ## passos
-1. atualizar modelo banco_sqlite3.sql em contabilidade.db
+1. criar tela mapa demonstrações
+  - consiste em montar os relatorios DVA,DFC,Balancete,Balanço,DRE aos padroes da entidade
+    - permite modificar seu plano de contas e colocar contas novas para que vao compor esses campos
+2. criar tela trava contabil
+   - tela de trava contabil do exercicio
+     - consiste em travar ou destravar o exercicio
+       - a cada mes gerar um exercicio: mes ano is_closed = 1 [aberto]
+         - quando ligar o programa, verificar se o exercicio existe ou nao
+           - criar caso nao exista
+       - travar exercicio:
+         digite o mes e o ano, exercicio travado, nao pode mais :
+           - criar, excluir, alterar lancamentos
+           - pode estornar, ajustar lançamento  
+       - destravar exercicio    
+         digite o mes e o ano, exercicio destravado
+       - so o contador pode travar ou destravar o exercicio
 
-2. criar tela nota_fiscal
-3. criar tela mapa demonstrações
-4. alterar tela empresa
-   - campo numero_viabilidade
-5. criar tela de-para sped-mappings
-6. criar tela trava contabil
-7. criar tela certificado digital
