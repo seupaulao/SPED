@@ -1,5 +1,5 @@
-receitabruta=30000;
-pprolabore=0.25;
+receitabruta=20950; #14500
+pprolabore=0.28;    #0.28
 prolabore=`echo "$receitabruta * $pprolabore" | bc`;
 inss=`echo "$prolabore * 0.11" | bc`;
 

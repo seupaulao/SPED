@@ -5,6 +5,8 @@ from utils import *
 from empresa import *
 from contas import *
 from lancamento import *
+from nota_fiscal import *
+from tomador import *
 
 import funcoes_relatorios as relatorios
 
@@ -102,6 +104,9 @@ def main() -> None:
             print("[c] Cadastro Empresa")
             print("[d] Gerar ECD")
             print("[e] Plano de Contas")
+            print("[f] Nota Fiscal")
+            print("[g] Tomadores")
+            print("[i] Avaliação Imposto")
             print("[q] Sair")
 
             choice = input("\nEscolha: ").strip().lower()
@@ -114,7 +119,13 @@ def main() -> None:
             elif choice == "d":
                 menu_ecd(conn)
             elif choice == "e":
-                menu_plano_contas(conn)    
+                menu_plano_contas(conn)
+            elif choice == "f":
+                menu_nota_fiscal(conn)
+            elif choice == "g":
+                menu_tomador(conn)
+            elif choice == "i":
+                menu_avaliacao_imposto() 
             elif choice == "q":
                 return
             else:
@@ -122,6 +133,32 @@ def main() -> None:
     finally:
         conn.close()
 
+
+def menu_avaliacao_imposto():
+    receita=float(input("\nReceita: "))
+    ppro=float(input("\n% Prolabore [Inteiro]: "))
+    perpro = ppro / 100
+    prolabore = receita * perpro
+    iss = receita * 0.03
+    inss = prolabore * 0.11
+    anexo = 5
+    if perpro >= 0.28:
+       anexo = 3
+    peranexo = 0.155
+    if anexo == 3:
+       peranexo = 0.06
+    DAS=receita * peranexo
+    print("Prolabore   : {:.2f} a {:.2f}%".format(prolabore, ppro))
+    print("ISS         : {:.2f}".format(iss))
+    liq = receita - iss
+    print("NF          : {:.2f}".format(liq)) 
+    print("INSS        : {:.2f}".format(inss))
+    ianexo = peranexo * 100
+    print("DAS         : {:.2f}, Anexo: {} - {:.2f}%".format(DAS, anexo, ianexo))
+    total = inss + DAS
+    print("Total Imp   : {:.2f}".format(total))
+    saldo = liq - total
+    print("Saldo       : {:.2f}".format(saldo))   
 
 if __name__ == "__main__":
     main()

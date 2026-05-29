@@ -14,46 +14,6 @@ EMPRESA_FIELDS = [
 ]
 
 
-def ask_empresa(conn: sqlite3.Connection) -> Optional[sqlite3.Row]:
-    total = fetch_one(conn, "SELECT COUNT(*) AS total FROM empresa")
-    if not total or total["total"] == 0:
-        pause("Não há empresas cadastradas. Cadastre uma Empresa no Menu Principal. Clique ENTER para voltar ao Menu Principal.")
-        return None
-
-    termo = input("Qual a empresa? ").strip()
-    if not termo:
-        pause("Não encontrei nenhuma empresa cadastrada com os dados digitados. Clique ENTER para voltar ao Menu Principal.")
-        return None
-
-    empresa = fetch_one(
-        conn,
-        """
-        SELECT *
-        FROM empresa
-        WHERE CAST(id AS TEXT) = ?
-           OR cnpj = ?
-           OR UPPER(nome) = UPPER(?)
-           OR UPPER(nome) LIKE UPPER(?)
-        ORDER BY CASE
-            WHEN CAST(id AS TEXT) = ? THEN 0
-            WHEN cnpj = ? THEN 1
-            WHEN UPPER(nome) = UPPER(?) THEN 2
-            ELSE 3
-        END,
-        id
-        LIMIT 1
-        """,
-        (termo, termo, termo, f"%{termo}%", termo, termo, termo),
-    )
-    if not empresa:
-        pause("Não encontrei nenhuma empresa cadastrada com os dados digitados. Clique ENTER para voltar ao Menu Principal.")
-        return None
-
-    print(f"\nEMPRESA: {empresa['id']} - {empresa['nome']}")
-    print(empresa["cnpj"])
-    return empresa
-
-
 def collect_empresa_data(existing: Optional[sqlite3.Row] = None) -> Optional[dict[str, Any]]:
     values: dict[str, Any] = {}
     for field_name, label, required, field_type in EMPRESA_FIELDS:
