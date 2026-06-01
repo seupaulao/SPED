@@ -13,6 +13,11 @@ EMPRESA_FIELDS = [
     ("data_fim", "DATA DE FIM", False, "date"),
 ]
 
+def is_empresa_table_empty(conn: sqlite3.Connection) -> bool:
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM empresa")
+    count = cursor.fetchone()[0]
+    return count == 0
 
 def collect_empresa_data(existing: Optional[sqlite3.Row] = None) -> Optional[dict[str, Any]]:
     values: dict[str, Any] = {}

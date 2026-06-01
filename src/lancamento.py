@@ -133,7 +133,7 @@ def fetch_lancamento_items(conn: sqlite3.Connection, lancamento_id: int) -> list
     return fetch_all(
         conn,
         """
-        SELECT li.id, li.conta_id, li.tipo, li.valor, li.historico, c.codigo, c.descricao
+        SELECT li.id, li.conta_id, li.tipo, li.valor, c.codigo, c.descricao
         FROM lancamento_item li
         JOIN plano_contas c ON c.id = li.conta_id
         WHERE li.lancamento_id = ?
@@ -158,7 +158,7 @@ def print_lancamento_detalhes(conn: sqlite3.Connection, lancamento: sqlite3.Row)
 
 def choose_lancamento(conn: sqlite3.Connection, empresa: sqlite3.Row, action_label: str) -> Optional[sqlite3.Row]:
     visualizar_lancamentos(conn, empresa, pause_after=False)
-    code = input(f"\nQual o ID do lançamento que deseja {action_label}? Digite '.' para voltar ao submenu. ").strip()
+    code = input(f"\nQual o ID do lançamento que deseja {action_label}? [Digite '.' para voltar ao submenu.] ").strip()
     if code == ".":
         return None
     lancamento = fetch_lancamento(conn, empresa["id"], code)

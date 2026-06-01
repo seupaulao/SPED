@@ -256,3 +256,11 @@ def ask_tomador(conn: sqlite3.Connection) -> Optional[sqlite3.Row]:
     print(f"\nTOMADOR: {tomador['id']} - {tomador['nome']}")
     print(tomador["cnpj"])
     return tomador
+
+def is_novo_mes(conn: sqlite3.Connection) -> bool:
+    last_lancamento = fetch_one(conn, "SELECT MAX(data) AS ultima_data FROM lancamento")
+    if not last_lancamento or not last_lancamento["ultima_data"]:
+        return True
+    ultima_data = datetime.strptime(last_lancamento["ultima_data"], "%Y-%m-%d")
+    hoje = datetime.today()
+    return (hoje.year, hoje.month) != (ultima_data.year, ultima_data.month)

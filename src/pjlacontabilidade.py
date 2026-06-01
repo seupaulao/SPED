@@ -7,6 +7,7 @@ from contas import *
 from lancamento import *
 from nota_fiscal import *
 from tomador import *
+from trava_contabil import *
 
 import funcoes_relatorios as relatorios
 
@@ -96,6 +97,12 @@ def menu_ecd(conn: sqlite3.Connection) -> None:
 
 def main() -> None:
     conn = connect_db()
+    if is_empresa_table_empty(conn):
+        print("Nenhuma empresa cadastrada. Por favor, cadastre uma empresa para continuar.")
+        menu_cadastro_empresa(conn)
+    if not trava_contabil_existe(conn, datetime.today().month, datetime.today().year):
+        criar_trava_contabil_automatica_mensal(conn)
+        print("Trava Contábil do mês criada automaticamente.")
     try:
         while True:
             print_header()
@@ -107,6 +114,7 @@ def main() -> None:
             print("[f] Nota Fiscal")
             print("[g] Tomadores")
             print("[i] Avaliação Imposto")
+            print("[h] Realizar Trava Contábil do Exercício")
             print("[q] Sair")
 
             choice = input("\nEscolha: ").strip().lower()
@@ -126,6 +134,8 @@ def main() -> None:
                 menu_tomador(conn)
             elif choice == "i":
                 menu_avaliacao_imposto() 
+            elif choice == "h":
+                menu_trava_contabil(conn)
             elif choice == "q":
                 return
             else:

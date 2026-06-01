@@ -40,7 +40,7 @@ def inserir_tomador(conn: sqlite3.Connection) -> None:
     municipio = input("Município: ").strip()
     cursor = conn.cursor()
     cursor.execute(
-        "INSERT INTO tomadores (cnpj, nome, uf, municipio) VALUES (?, ?, ?, ?)",
+        "INSERT INTO tomador (cnpj, nome, uf, municipio) VALUES (?, ?, ?, ?)",
         (cnpj, nome, uf, municipio),
     )
     conn.commit()
@@ -51,7 +51,7 @@ def excluir_tomador(conn: sqlite3.Connection) -> None:
     print("-" * 20)
     cnpj = input("CNPJ do Tomador a excluir: ").strip()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM tomadores WHERE cnpj = ?", (cnpj,))
+    cursor.execute("DELETE FROM tomador WHERE cnpj = ?", (cnpj,))
     if cursor.rowcount == 0:
         pause("Tomador não encontrado.")
     else:
@@ -62,7 +62,7 @@ def visualizar_tomadores(conn: sqlite3.Connection) -> None:
     print("\nTomadores")
     print("-" * 20)
     cursor = conn.cursor()
-    cursor.execute("SELECT cnpj, nome, uf, municipio FROM tomadores ORDER BY nome")
+    cursor.execute("SELECT cnpj, nome, uf, municipio FROM tomador ORDER BY nome")
     rows = cursor.fetchall()
     if not rows:
         print("Nenhum tomador encontrado.")
@@ -75,7 +75,7 @@ def listar_tomadores(conn: sqlite3.Connection) -> None:
     print("\nLista de Tomadores")
     print("-" * 20)
     cursor = conn.cursor()
-    cursor.execute("SELECT cnpj, nome, uf, municipio FROM tomadores ORDER BY nome")
+    cursor.execute("SELECT cnpj, nome, uf, municipio FROM tomador ORDER BY nome")
     rows = cursor.fetchall()
     if not rows:
         print("Nenhum tomador encontrado.")

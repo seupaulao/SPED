@@ -14,6 +14,7 @@ create table nota_fiscal (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   numero INTEGER,
   codigo TEXT,
+  referencia TEXT,
   chave_acesso TEXT,
   situacao TEXT,
   data_emissao TEXT,
@@ -98,12 +99,11 @@ CREATE INDEX idx_lancamento_data ON lancamento(data);
 CREATE INDEX idx_lancamento_item_conta ON lancamento_item(conta_id);
 
 CREATE TABLE trava_contabil (
-    id TEXT PRIMARY KEY,
-    empresa_id TEXT NOT NULL REFERENCES empresas(id),
-    year INTEGER NOT NULL,
-    month INTEGER NOT NULL,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    empresa_id INTEGER NOT NULL REFERENCES empresa(id),
+    ano INTEGER NOT NULL,
+    mes INTEGER NOT NULL,
     is_closed INTEGER DEFAULT 0,
-    closed_by TEXT REFERENCES usuarios(id),
     closed_at TEXT
 );
 

@@ -35,6 +35,7 @@ def criar_nota_fiscal(conn: sqlite3.Connection, empresa: dict, tomador: dict) ->
     except ValueError as e:
         pause(str(e))
         return
+    referencia = input("Referência: ").strip()
     valor_total = input("Valor Total: ").strip()
     try:
         valor_total = parse_decimal(valor_total)
@@ -47,8 +48,8 @@ def criar_nota_fiscal(conn: sqlite3.Connection, empresa: dict, tomador: dict) ->
     situacao = input("Situação: ").strip()
     cursor = conn.cursor()
     cursor.execute(
-        "INSERT INTO notas_fiscais (empresa_id, tomador_id, data_emissao, valor_total, numero, codigo, chave_acesso, situacao) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-        (empresa["id"], tomador["id"], data_emissao, valor_total, numero, codigo, chave_acesso, situacao),
+        "INSERT INTO nota_fiscal (empresa_id, tomador_id, referencia, data_emissao, valor_total, numero, codigo, chave_acesso, situacao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (empresa["id"], tomador["id"], referencia, data_emissao, valor_total, numero, codigo, chave_acesso, situacao),
     )
     conn.commit()
     pause("Nota Fiscal criada com sucesso.")
@@ -58,7 +59,7 @@ def visualizar_notas_fiscais(conn: sqlite3.Connection, empresa: dict) -> None:
     print("-" * 20)
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT id, numero, data_emissao, valor_total, situacao FROM notas_fiscais WHERE empresa_id = ? ORDER BY data_emissao DESC",
+        "SELECT id, numero, data_emissao, valor_total, situacao FROM nota_fiscal WHERE empresa_id = ? ORDER BY data_emissao DESC",
         (empresa["id"],),
     )
     rows = cursor.fetchall()
@@ -80,7 +81,7 @@ def excluir_nota_fiscal(conn: sqlite3.Connection, empresa: dict) -> None:
     print("-" * 20)
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT id, numero, data_emissao FROM notas_fiscais WHERE empresa_id = ? ORDER BY data_emissao DESC",
+        "SELECT id, numero, data_emissao FROM nota_fiscal WHERE empresa_id = ? ORDER BY data_emissao DESC",
         (empresa["id"],),
     )
     rows = cursor.fetchall()
@@ -99,7 +100,7 @@ def excluir_nota_fiscal(conn: sqlite3.Connection, empresa: dict) -> None:
     except ValueError:
         pause("ID inválido. Clique ENTER para tentar novamente.")
         return
-    cursor.execute("DELETE FROM notas_fiscais WHERE id = ? AND empresa_id = ?", (nota_id, empresa["id"]))
+    cursor.execute("DELETE FROM nota_fiscal WHERE id = ? AND empresa_id = ?", (nota_id, empresa["id"]))
     if cursor.rowcount == 0:
         pause("Nota Fiscal não encontrada ou não pertence à empresa selecionada. Clique ENTER para tentar novamente.")
     else:
