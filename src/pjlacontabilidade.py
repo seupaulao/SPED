@@ -8,6 +8,7 @@ from lancamento import *
 from nota_fiscal import *
 from tomador import *
 from trava_contabil import *
+from mapa import *
 
 import funcoes_relatorios as relatorios
 
@@ -115,6 +116,7 @@ def main() -> None:
             print("[g] Tomadores")
             print("[i] Avaliação Imposto")
             print("[h] Realizar Trava Contábil do Exercício")
+            print("[j] Gerar Mapa de Demonstrações Contábeis")
             print("[q] Sair")
 
             choice = input("\nEscolha: ").strip().lower()
@@ -138,6 +140,8 @@ def main() -> None:
                 menu_trava_contabil(conn)
             elif choice == "q":
                 return
+            elif choice == "j":
+                menu_mapa_demontracoes(conn)
             else:
                 pause("Opção inválida. Clique ENTER para tentar novamente.")
     finally:

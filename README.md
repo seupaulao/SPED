@@ -6,9 +6,10 @@ Aplicação de contabilidade em Python
 - nota-aplicacao
 - banco: contabilidade_simples.db
 
-## passos
-1. criar tela mapa demonstrações
-  - consiste em montar os relatorios DVA,DFC,Balancete,Balanço,DRE aos padroes da entidade
-    - permite modificar seu plano de contas e colocar contas novas para que vao compor esses campos
+## próximos passos
 
+1. geração XML NF-e
+2. assinatura XML NF-e
+3. geração XML NFS-e Fortaleza
+4. geração sped
 
