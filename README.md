@@ -8,8 +8,9 @@ Aplicação de contabilidade em Python
 
 ## próximos passos
 
-1. geração XML NF-e
-2. assinatura XML NF-e
-3. geração XML NFS-e Fortaleza
-4. geração sped
+1. nos relatórios e visualizações usar a biblioteca RICH
+2. geração XML NF-e
+3. assinatura XML NF-e
+4. geração XML NFS-e Fortaleza
+5. geração sped
 

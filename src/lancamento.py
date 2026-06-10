@@ -1,6 +1,11 @@
 from utils import *
 from empresa import *
 from contas import *
+from rich.console import Console
+from rich.table import Table
+from rich import box
+
+_console = Console()
 
 def prompt_lancamento_header() -> Optional[dict[str, Any]]:
     print("\nNovo lançamento")
@@ -322,16 +327,34 @@ def visualizar_lancamentos(conn: sqlite3.Connection, empresa: sqlite3.Row, pause
         if pause_after:
             pause("Nenhum lançamento encontrado para esta empresa. Clique ENTER para voltar ao submenu.")
         else:
-            print("\nNenhum lançamento encontrado para esta empresa.")
+            _console.print("\nNenhum lançamento encontrado para esta empresa.")
         return
 
-    print("\nID | CODIGO | DATA | DESCRICAO | TIPO | VALOR")
-    print("-" * 90)
+    table = Table(box=box.SIMPLE_HEAVY, show_lines=False)
+    table.add_column("ID", justify="right", style="bold", no_wrap=True)
+    table.add_column("CODIGO", no_wrap=True)
+    table.add_column("DATA", no_wrap=True)
+    table.add_column("DESCRICAO")
+    table.add_column("TIPO", justify="center", no_wrap=True)
+    table.add_column("VALOR", justify="right", no_wrap=True)
+
     for row in rows:
-        print(
-            f"{row['id']:>2} | {(row['codigo'] or ''):<10.10} | {display_date(row['data'])} | "
-            f"{(row['descricao'] or ''):<40.40} | {(row['tipo'] or ''):<5.5} | {format_currency(row['valor'])}"
+        tipo = row["tipo"] or ""
+        valor = row["valor"]
+
+        tipo_style = "yellow" if tipo == "D" else ("green" if tipo == "C" else "")
+        valor_style = "red" if valor < 0 else "blue"
+
+        table.add_row(
+            str(row["id"]),
+            row["codigo"] or "",
+            display_date(row["data"]),
+            row["descricao"] or "",
+            f"[{tipo_style}]{tipo}[/{tipo_style}]" if tipo_style else tipo,
+            f"[{valor_style}]{format_currency(valor)}[/{valor_style}]",
         )
+
+    _console.print(table)
     if pause_after:
         pause()
 
