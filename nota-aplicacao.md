@@ -376,13 +376,7 @@ Caso contrário, volta ao submenu.
 
 Ao selecionar a letra correspondente, volta ao menu principal.
 
-### próximos passos
 
-Com base no estado atual da implementacao, os proximos passos recomendados sao:
-
-1. detalhar e implementar edicao pontual de itens do lancamento, sem exigir redigitacao completa de todas as partidas
-2. detalhar a geracao do ECD/SPED para substituir o placeholder atual da opcao `Gerar ECD`
-3. criar um fluxo de carga inicial de plano de contas por empresa, para permitir uso real do Livro Diario sem depender de cadastro manual direto no banco
 
 
 
