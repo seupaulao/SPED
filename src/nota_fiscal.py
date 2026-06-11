@@ -1,6 +1,11 @@
 
 import sqlite3
 from utils import *
+from rich.console import Console
+from rich.table import Table
+from rich import box
+
+_console = Console()
 
 
 def menu_nota_fiscal(conn: sqlite3.Connection) -> None:
@@ -67,13 +72,24 @@ def visualizar_notas_fiscais(conn: sqlite3.Connection, empresa: dict) -> None:
         print("Nenhuma Nota Fiscal encontrada.")
         pause()
         return
-    print(f"{'ID':<5} {'Número':<10} {'Data de Emissão':<15} {'Valor Total':>15} {'Situação':<10}")
-    print("-" * 60)
-    for row in rows:
-        id, numero, data_emissao, valor_total, situacao = row
-        data_emissao = display_date(data_emissao)
-        valor_total = format_currency(valor_total)
-        print(f"{id:<5} {numero:<10} {data_emissao:<15} {valor_total:>15} {situacao:<10}")
+
+    table = Table(box=box.SIMPLE_HEAVY, show_lines=False)
+    table.add_column("ID", justify="right", no_wrap=True)
+    table.add_column("Número", no_wrap=True)
+    table.add_column("Data de Emissão", no_wrap=True)
+    table.add_column("Valor Total", justify="right", no_wrap=True)
+    table.add_column("Situação", no_wrap=True)
+
+    for id, numero, data_emissao, valor_total, situacao in rows:
+        table.add_row(
+            str(id),
+            str(numero) if numero is not None else "",
+            display_date(data_emissao),
+            format_currency(valor_total),
+            str(situacao) if situacao is not None else "",
+        )
+
+    _console.print(table)
     pause()
 
 def excluir_nota_fiscal(conn: sqlite3.Connection, empresa: dict) -> None:

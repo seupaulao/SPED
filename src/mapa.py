@@ -1,5 +1,10 @@
 import sqlite3
 from utils import *
+from rich.console import Console
+from rich.table import Table
+from rich import box
+
+_console = Console()
 
 def menu_mapa_demontracoes(conn: sqlite3.Connection) -> None:
     print("\n------\n")
@@ -77,10 +82,23 @@ def visualizar_mapas(conn: sqlite3.Connection, empresa: dict) -> None:
         pause("Nenhum mapa de demonstrações contábeis encontrado.")
         return
 
-    print(f"\n{'ID':<6} {'TIPO':<6} {'CATEGORIA':<20} {'CONTA CÓDIGO':<12} {'CONTA DESCRIÇÃO'}")
-    print("-" * 80)
+    table = Table(box=box.SIMPLE_HEAVY, show_lines=False)
+    table.add_column("ID", justify="right", no_wrap=True)
+    table.add_column("TIPO", no_wrap=True)
+    table.add_column("CATEGORIA")
+    table.add_column("CONTA CÓDIGO", no_wrap=True)
+    table.add_column("CONTA DESCRIÇÃO")
+
     for row in rows:
-        print(f"{row['id']:<6} {row['tipo']:<6} {row['categoria']:<20} {row['conta_codigo']:<12} {row['conta_descricao']}")
+        table.add_row(
+            str(row['id']),
+            row['tipo'] or "",
+            row['categoria'] or "",
+            row['conta_codigo'] or "",
+            row['conta_descricao'] or "",
+        )
+
+    _console.print(table)
     pause("Clique ENTER para voltar ao submenu.")
 
 def excluir_mapa(conn: sqlite3.Connection, empresa: dict) -> None:
@@ -143,9 +161,24 @@ def gerar_relatorio_mapa(conn: sqlite3.Connection, empresa: dict) -> None:
         pause("Nenhum mapa de demonstrações contábeis encontrado para os critérios informados.")
         return
 
-    print(f"\n{'ID':<6} {'TIPO':<6} {'CATEGORIA':<20} {'CONTA CÓDIGO':<12} {'CONTA DESCRIÇÃO':<30} {'SALDO':>12}")
-    print("-" * 95)
+    table = Table(box=box.SIMPLE_HEAVY, show_lines=False)
+    table.add_column("ID", justify="right", no_wrap=True)
+    table.add_column("TIPO", no_wrap=True)
+    table.add_column("CATEGORIA")
+    table.add_column("CONTA CÓDIGO", no_wrap=True)
+    table.add_column("CONTA DESCRIÇÃO")
+    table.add_column("SALDO", justify="right", no_wrap=True)
+
     for row in rows:
-        print(f"{row['id']:<6} {row['tipo']:<6} {row['categoria']:<20} {row['conta_codigo']:<12} {row['conta_descricao']:<30} {row['saldo']:>12.2f}")
+        table.add_row(
+            str(row['id']),
+            row['tipo'] or "",
+            row['categoria'] or "",
+            row['conta_codigo'] or "",
+            row['conta_descricao'] or "",
+            f"{row['saldo']:.2f}",
+        )
+
+    _console.print(table)
     pause("Clique ENTER para voltar ao submenu.")
 

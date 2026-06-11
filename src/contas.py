@@ -106,10 +106,21 @@ def listar_contas(conn: sqlite3.Connection) -> None:
         pause("Nenhuma conta encontrada. Clique ENTER para voltar ao submenu.")
         return
 
-    print("\nCÓDIGO | DESCRIÇÃO | TIPO | NATUREZA")
-    print("-" * 50)
+    table = Table(box=box.SIMPLE_HEAVY, show_lines=False)
+    table.add_column("CÓDIGO", no_wrap=True)
+    table.add_column("DESCRIÇÃO")
+    table.add_column("TIPO", justify="center", no_wrap=True)
+    table.add_column("NATUREZA", justify="center", no_wrap=True)
+
     for row in rows:
-        print(f"{row['codigo']:<10} | {row['descricao']:<20} | {row['tipo']:<4} | {row['natureza']:<8}")
+        table.add_row(
+            row["codigo"] or "",
+            row["descricao"] or "",
+            row["tipo"] or "",
+            row["natureza"] or "",
+        )
+
+    _console.print(table)
     pause("Clique ENTER para voltar ao submenu.")
 
 def listar_contas_empresa(conn: sqlite3.Connection, empresa: dict) -> None:

@@ -1,6 +1,11 @@
 
 import sqlite3
 from utils import *
+from rich.console import Console
+from rich.table import Table
+from rich import box
+
+_console = Console()
 
 def menu_trava_contabil(conn: sqlite3.Connection) -> None:
     empresa = ask_empresa(conn)
@@ -92,11 +97,17 @@ def visualizar_travas_contabeis(conn: sqlite3.Connection, empresa: dict) -> None
         print("Nenhuma trava contábil encontrada.")
         pause()
         return
-    print(f"{'Mês':<10} {'Ano':<10} {'Situação':<10}")
-    print("-" * 30)
+
+    table = Table(box=box.SIMPLE_HEAVY, show_lines=False)
+    table.add_column("Mês", justify="right", no_wrap=True)
+    table.add_column("Ano", justify="right", no_wrap=True)
+    table.add_column("Situação", no_wrap=True)
+
     for mes, ano, is_closed in rows:
         situacao = "Fechada" if is_closed else "Aberta"
-        print(f"{mes:<10} {ano:<10} {situacao:<10}")
+        table.add_row(str(mes), str(ano), situacao)
+
+    _console.print(table)
     pause()
 
 def fechar_trava_contabil(conn: sqlite3.Connection, empresa: dict) -> None:

@@ -3,6 +3,11 @@ from typing import Any, Iterable, Optional
 import sqlite3
 from pathlib import Path
 from utils import *
+from rich.console import Console
+from rich.table import Table
+from rich import box
+
+_console = Console()
 
 EMPRESA_FIELDS = [
     ("cnpj", "CNPJ", True, "text"),
@@ -92,10 +97,15 @@ def listar_empresas(conn: sqlite3.Connection) -> None:
             page -= 1
             continue
 
-        print("\nCODIGO | NOME | CNPJ")
-        print("-" * 72)
+        table = Table(box=box.SIMPLE_HEAVY, show_lines=False)
+        table.add_column("CODIGO", justify="right", no_wrap=True)
+        table.add_column("NOME")
+        table.add_column("CNPJ", no_wrap=True)
+
         for row in rows:
-            print(f"{row['id']:>6} | {row['nome']:<30.30} | {row['cnpj']}")
+            table.add_row(str(row["id"]), row["nome"] or "", row["cnpj"] or "")
+
+        _console.print(table)
 
         command = input("\n[N] próxima página | [P] página anterior | [ENTER] voltar: ").strip().lower()
         if command == "n":

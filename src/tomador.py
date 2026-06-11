@@ -1,5 +1,10 @@
 import sqlite3
 from utils import *
+from rich.console import Console
+from rich.table import Table
+from rich import box
+
+_console = Console()
 
 EMPRESA_FIELDS = [
     ("cnpj", "CNPJ", True, "text"),
@@ -66,9 +71,19 @@ def visualizar_tomadores(conn: sqlite3.Connection) -> None:
     rows = cursor.fetchall()
     if not rows:
         print("Nenhum tomador encontrado.")
-    else:
-        for cnpj, nome, uf, municipio in rows:
-            print(f"CNPJ: {cnpj} | Nome: {nome} | UF: {uf} | Município: {municipio}")
+        pause()
+        return
+
+    table = Table(box=box.SIMPLE_HEAVY, show_lines=False)
+    table.add_column("CNPJ", no_wrap=True)
+    table.add_column("NOME")
+    table.add_column("UF", justify="center", no_wrap=True)
+    table.add_column("MUNICÍPIO")
+
+    for cnpj, nome, uf, municipio in rows:
+        table.add_row(cnpj or "", nome or "", uf or "", municipio or "")
+
+    _console.print(table)
     pause()
 
 def listar_tomadores(conn: sqlite3.Connection) -> None:
@@ -79,7 +94,17 @@ def listar_tomadores(conn: sqlite3.Connection) -> None:
     rows = cursor.fetchall()
     if not rows:
         print("Nenhum tomador encontrado.")
-    else:
-        for cnpj, nome, uf, municipio in rows:
-            print(f"CNPJ: {cnpj} | Nome: {nome} | UF: {uf} | Município: {municipio}")
+        pause()
+        return
+
+    table = Table(box=box.SIMPLE_HEAVY, show_lines=False)
+    table.add_column("CNPJ", no_wrap=True)
+    table.add_column("NOME")
+    table.add_column("UF", justify="center", no_wrap=True)
+    table.add_column("MUNICÍPIO")
+
+    for cnpj, nome, uf, municipio in rows:
+        table.add_row(cnpj or "", nome or "", uf or "", municipio or "")
+
+    _console.print(table)
     pause()
